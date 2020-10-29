@@ -446,7 +446,16 @@ void CurlSession::ParseChunkSize(Context const& context)
       if (i > 1 && this->m_readBuffer[index] == '\n')
       {
         // get chunk size. Chunk size comes in Hex value
-        this->m_chunkSize = static_cast<int64_t>(std::stoull(strChunkSize, nullptr, 16));
+        try
+        {
+          this->m_chunkSize = static_cast<int64_t>(std::stoull(strChunkSize, nullptr, 16));
+        }
+        catch (std::invalid_argument& err)
+        {
+          (void)err;
+          // Server can return something like `\n\r\n` as a
+          this->m_chunkSize = 0;
+        }
 
         if (this->m_chunkSize == 0)
         { // Response with no content. end of chunk

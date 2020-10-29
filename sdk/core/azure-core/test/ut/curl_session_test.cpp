@@ -9,6 +9,7 @@
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Return;
+using ::testing::ReturnRef;
 using ::testing::SetArrayArgument;
 
 namespace Azure { namespace Core { namespace Test {
@@ -40,5 +41,45 @@ namespace Azure { namespace Core { namespace Test {
         = std::make_unique<Azure::Core::Http::CurlSession>(request, std::move(uniqueCurlMock));
 
     EXPECT_NO_THROW(session->Perform(Azure::Core::GetApplicationContext()));
+  }
+
+  TEST_F(CurlSession, chunkResponseSizeZero)
+  {
+    // chunked response with no content and no size
+    std::string response("HTTP/1.1 200 Ok\r\ntransfer-encoding: chunked\r\n\r\n\n\r\n");
+    std::string host("sample-host");
+
+    // Can't mock the curMock directly from a unique ptr, heap allocate it first and then make a
+    // unique ptr for it
+    MockCurlNetworkConnection* curlMock = new MockCurlNetworkConnection();
+    EXPECT_CALL(*curlMock, SendBuffer(_, _, _)).WillOnce(Return(CURLE_OK));
+    EXPECT_CALL(*curlMock, ReadFromSocket(_, _, _))
+        .WillOnce(DoAll(
+            SetArrayArgument<1>(response.data(), response.data() + response.size()),
+            Return(response.size())));
+    EXPECT_CALL(*curlMock, GetHost()).WillRepeatedly(ReturnRef(host));
+    EXPECT_CALL(*curlMock, updateLastUsageTime());
+    EXPECT_CALL(*curlMock, DestructObj());
+
+    // Create the unique ptr to take care about memory free at the end
+    std::unique_ptr<MockCurlNetworkConnection> uniqueCurlMock(curlMock);
+
+    // Simulate a request to be sent
+    Azure::Core::Http::Url url("http://microsoft.com");
+    Azure::Core::Http::Request request(Azure::Core::Http::HttpMethod::Get, url);
+
+    {
+      // Create the session inside scope so it is released and the connection is moved to the pool
+      auto session
+          = std::make_unique<Azure::Core::Http::CurlSession>(request, std::move(uniqueCurlMock));
+
+      EXPECT_NO_THROW(session->Perform(Azure::Core::GetApplicationContext()));
+    }
+
+    // IF we don't clean the connection here, test will think we leak, which is not true because
+    // use unique_ptr for each connection
+    EXPECT_EQ(Azure::Core::Http::CurlConnectionPool::ConnectionPoolIndex.size(), 1);
+    EXPECT_NO_THROW(Azure::Core::Http::CurlConnectionPool::ConnectionPoolIndex.clear());
+    EXPECT_EQ(Azure::Core::Http::CurlConnectionPool::ConnectionPoolIndex.size(), 0);
   }
 }}} // namespace Azure::Core::Test

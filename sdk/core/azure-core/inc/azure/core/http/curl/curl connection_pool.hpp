@@ -21,7 +21,9 @@
 #ifdef TESTING_BUILD
 // Define the class name that reads from ConnectionPool private members
 namespace Azure { namespace Core { namespace Test {
-  class TransportAdapter_connectionPoolTest_Test;
+  class TransportAdapter_connectionPoolTest_Test; // Test connection pool
+  class CurlSession_chunkResponseSizeZero_Test; // Allow access to the pool to clean mock connection
+                                                // before test ends
 }}} // namespace Azure::Core::Test
 #endif
 
@@ -38,6 +40,7 @@ namespace Azure { namespace Core { namespace Http {
 #ifdef TESTING_BUILD
     // Give access to private to this tests class
     friend class Azure::Core::Test::TransportAdapter_connectionPoolTest_Test;
+    friend class Azure::Core::Test::CurlSession_chunkResponseSizeZero_Test;
 #endif
   public:
     /**
