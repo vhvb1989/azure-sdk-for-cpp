@@ -47,7 +47,7 @@ namespace Azure { namespace Core { namespace Test {
   private:
     std::list<NetworkCallRecord> m_networkCallRecords;
     std::list<std::string> m_variables;
-    static std::mutex insertRecordMutex;
+    mutable std::mutex m_insertRecordMutex;
 
   public:
     /**
@@ -56,10 +56,8 @@ namespace Azure { namespace Core { namespace Test {
      */
     RecordedData() {}
 
-    void addNetworkCall(NetworkCallRecord record)
-    {
-      std::lock_guard<std::mutex> lock(insertRecordMutex);
-      m_networkCallRecords.emplace_back(record);
-    };
+    void AddNetworkCall(NetworkCallRecord record);
+
+    std::list<NetworkCallRecord>& GetRecording() { return m_networkCallRecords; };
   };
 }}} // namespace Azure::Core::Test

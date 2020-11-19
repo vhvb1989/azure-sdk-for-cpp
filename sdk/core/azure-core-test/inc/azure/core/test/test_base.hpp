@@ -18,8 +18,9 @@ namespace Azure { namespace Core { namespace Test {
     static Azure::Core::Test::TestMode testMode;
 
   protected:
-    Azure::Core::Test::InterceptorManager m_interceptor = Azure::Core::Test::InterceptorManager();
+    std::unique_ptr<Azure::Core::Test::InterceptorManager> m_interceptor;
 
+  public:
     /**
      * @brief Set the test mode
      *
@@ -38,9 +39,9 @@ namespace Azure { namespace Core { namespace Test {
       // Create test content from gtest Test Info
       auto testNameInfo = ::testing::UnitTest::GetInstance()->current_test_info();
       Azure::Core::Test::TestContextManager testContext(testNameInfo, testMode);
-
+ 
       // set the interceptor for the current test
-      m_interceptor = Azure::Core::Test::InterceptorManager(testContext);
+      m_interceptor = std::make_unique<Azure::Core::Test::InterceptorManager>(testContext);
     }
   };
 }}} // namespace Azure::Core::Test

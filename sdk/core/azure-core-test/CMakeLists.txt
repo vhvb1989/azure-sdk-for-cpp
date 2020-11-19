@@ -13,6 +13,7 @@ add_library (
   src/interceptor_manager.cpp
   src/playback_http_transport.cpp
   src/record_policy.cpp
+  src/recorded_data.cpp
   src/test_base.cpp
   )
 

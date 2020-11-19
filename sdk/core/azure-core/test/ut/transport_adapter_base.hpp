@@ -48,15 +48,15 @@ namespace Azure { namespace Core { namespace Test {
       // Default transport policy and transport policy options
       Azure::Core::Http::TransportPolicyOptions transportOptions = GetParam();
 
-      if (m_interceptor.IsPlaybackMode())
+      if (m_interceptor->IsPlaybackMode())
       {
         // Replace the transport adapter for the playback client
-        transportOptions.Transport = std::move(m_interceptor.GetPlaybackClient());
+        transportOptions.Transport = std::move(m_interceptor->GetPlaybackClient());
       }
-      else if (!m_interceptor.IsLiveMode())
+      else if (!m_interceptor->IsLiveMode())
       {
         // insert record policy
-        policies.push_back(std::move(m_interceptor.GetRecordPolicy()));
+        policies.push_back(std::move(m_interceptor->GetRecordPolicy()));
       }
 
       // Record and Live mode uses whatever transport adapter the test is using for network

@@ -117,6 +117,6 @@ std::unique_ptr<RawResponse> Azure::Core::Test::RecordNetworkCallPolicy::Send(
     record.response = std::move(responseData);
   }
 
-  m_recordedData.addNetworkCall(std::move(record));
+  m_recordedData.AddNetworkCall(std::move(record));
   return response;
 }

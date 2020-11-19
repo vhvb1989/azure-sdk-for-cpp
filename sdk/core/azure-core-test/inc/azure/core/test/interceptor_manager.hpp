@@ -21,6 +21,7 @@
 #pragma once
 
 #include <azure/core/http/policy.hpp>
+#include <iostream>
 #include <memory>
 #include <string>
 
@@ -43,16 +44,10 @@ namespace Azure { namespace Core { namespace Test {
     Azure::Core::Test::RecordedData m_recordedData;
 
   public:
-    /**
-     * @brief Enables to init an interceptor with empty values.
-     *
-     */
-    InterceptorManager(){};
-
     ~InterceptorManager()
     {
-      int x = 1;
-      x = 1 + 2;
+      // For Recording mode, persist recordings to file.
+      int a = 1;
     };
 
     explicit InterceptorManager(Azure::Core::Test::TestContextManager testContext)
