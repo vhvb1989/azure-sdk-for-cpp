@@ -8,6 +8,19 @@ project(azure-core-test LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+###############   nlohmann JSON witch Fetch Content ####################
+include(FetchContent)
+
+FetchContent_Declare(json
+  GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
+  GIT_TAG v3.9.1)
+
+FetchContent_GetProperties(json)
+if(NOT json_POPULATED)
+  FetchContent_Populate(json)
+  add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
 add_library (
   azure-core-test
   src/interceptor_manager.cpp
@@ -22,7 +35,7 @@ target_include_directories (azure-core-test PUBLIC $<BUILD_INTERFACE:${CMAKE_CUR
 # make sure that users can consume the project as a library.
 add_library (Azure::Core::Test ALIAS azure-core-test)
 
-target_link_libraries(azure-core-test PRIVATE azure-core gtest)
+target_link_libraries(azure-core-test PRIVATE azure-core gtest nlohmann_json::nlohmann_json)
 
 get_az_version("${CMAKE_CURRENT_SOURCE_DIR}/inc/azure/core/test/version.hpp")
 generate_documentation(azure-core-test ${AZ_LIBRARY_VERSION})
