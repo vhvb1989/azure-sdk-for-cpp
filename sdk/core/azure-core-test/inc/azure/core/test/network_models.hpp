@@ -10,6 +10,7 @@
 
 #include <list>
 #include <map>
+#include <mutex>
 #include <string>
 
 namespace Azure { namespace Core { namespace Test {
@@ -46,6 +47,7 @@ namespace Azure { namespace Core { namespace Test {
   private:
     std::list<NetworkCallRecord> m_networkCallRecords;
     std::list<std::string> m_variables;
+    static std::mutex insertRecordMutex;
 
   public:
     /**
@@ -53,6 +55,11 @@ namespace Azure { namespace Core { namespace Test {
      *
      */
     RecordedData() {}
-  };
 
+    void addNetworkCall(NetworkCallRecord record)
+    {
+      std::lock_guard<std::mutex> lock(insertRecordMutex);
+      m_networkCallRecords.emplace_back(record);
+    };
+  };
 }}} // namespace Azure::Core::Test

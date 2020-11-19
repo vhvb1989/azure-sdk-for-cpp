@@ -49,6 +49,12 @@ namespace Azure { namespace Core { namespace Test {
      */
     InterceptorManager(){};
 
+    ~InterceptorManager()
+    {
+      int x = 1;
+      x = 1 + 2;
+    };
+
     explicit InterceptorManager(Azure::Core::Test::TestContextManager testContext)
         : m_testSession(testContext.GetTestName()), m_testMode(testContext.GetTestMode())
     {
