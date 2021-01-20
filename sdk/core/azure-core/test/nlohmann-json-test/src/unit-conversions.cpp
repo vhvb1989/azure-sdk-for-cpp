@@ -218,7 +218,7 @@ TEST_CASE("value conversion")
       {
         // making the call to from_json throw in order to check capacity
         std::vector<float> v;
-        CHECK_THROWS_AS(nlohmann::from_json(j, v), json::type_error&);
+        CHECK_THROWS_AS(Azure::Core::Internal::Json::from_json(j, v), json::type_error&);
         CHECK(v.capacity() == j.size());
 
         // make sure all values are properly copied
