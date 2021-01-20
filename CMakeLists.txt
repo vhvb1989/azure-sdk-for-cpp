@@ -48,7 +48,7 @@ if(BUILD_TESTING)
     include(AddGoogleTest)
     enable_testing ()
     add_subdirectory(sdk/core/azure-core/test/ut)
-    add_subdirectory(sdk/core/azure-core/test/nlohmann-json-test)
+    #add_subdirectory(sdk/core/azure-core/test/nlohmann-json-test)
 endif()
 
 # compiler warning flags globally
@@ -66,6 +66,6 @@ add_subdirectory(sdk/core/azure-core)
 
 add_subdirectory(sdk/identity/azure-identity)
 
-add_subdirectory(sdk/storage)
-add_subdirectory(sdk/template/azure-template)
-add_subdirectory(sdk/keyvault)
+#add_subdirectory(sdk/storage)
+#add_subdirectory(sdk/template/azure-template)
+#add_subdirectory(sdk/keyvault)

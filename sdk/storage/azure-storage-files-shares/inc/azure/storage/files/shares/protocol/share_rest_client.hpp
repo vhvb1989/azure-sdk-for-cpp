@@ -2875,7 +2875,7 @@ namespace Azure { namespace Storage { namespace Files { namespace Shares {
 
           std::string json_body;
           {
-            Azure::Core::Internal::Json::json json;
+            Azure::Core::Internal::nlohmann::json json;
             SharePermissionToJson(json, createPermissionOptions.Permission);
             json_body = json.dump();
           }
@@ -3459,7 +3459,7 @@ namespace Azure { namespace Storage { namespace Files { namespace Shares {
         }
 
         static void SharePermissionToJson(
-            Azure::Core::Internal::Json::json& node,
+            Azure::Core::Internal::nlohmann::json& node,
             const Models::SharePermission& object)
         {
           node["permission"] = object.Permission;
@@ -3476,8 +3476,8 @@ namespace Azure { namespace Storage { namespace Files { namespace Shares {
             const auto& bodyBuffer = response.GetBody();
             Models::ShareGetPermissionResult result = bodyBuffer.empty()
                 ? Models::ShareGetPermissionResult()
-                : ShareGetPermissionResultFromSharePermission(
-                    SharePermissionFromJson(Azure::Core::Internal::Json::json::parse(bodyBuffer)));
+                : ShareGetPermissionResultFromSharePermission(SharePermissionFromJson(
+                    Azure::Core::Internal::nlohmann::json::parse(bodyBuffer)));
             return Azure::Core::Response<Models::ShareGetPermissionResult>(
                 std::move(result), std::move(responsePtr));
           }
@@ -3489,7 +3489,7 @@ namespace Azure { namespace Storage { namespace Files { namespace Shares {
         }
 
         static Models::SharePermission SharePermissionFromJson(
-            const Azure::Core::Internal::Json::json& node)
+            const Azure::Core::Internal::nlohmann::json& node)
         {
           Models::SharePermission result;
           result.Permission = node["permission"].get<std::string>();
