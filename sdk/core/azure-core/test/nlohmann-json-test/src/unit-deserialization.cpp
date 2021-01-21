@@ -37,7 +37,7 @@ using Azure::Core::Internal::Json::json;
 #include <valarray>
 
 namespace {
-struct SaxEventLogger : public nlohmann::json_sax<json>
+struct SaxEventLogger : public Azure::Core::Internal::Json::json_sax<json>
 {
   bool null() override
   {

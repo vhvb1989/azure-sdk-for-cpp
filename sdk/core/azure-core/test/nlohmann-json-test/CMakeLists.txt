@@ -93,53 +93,53 @@ endif()
 
 set(files
     src/unit-algorithms.cpp
-    #src/unit-allocator.cpp
-    #src/unit-alt-string.cpp
-    #src/unit-bson.cpp
-    #src/unit-capacity.cpp
-    #src/unit-cbor.cpp
-    #src/unit-class_const_iterator.cpp
-    #src/unit-class_iterator.cpp
-    #src/unit-class_lexer.cpp
-    #src/unit-class_parser.cpp
-    #src/unit-comparison.cpp
-    #src/unit-concepts.cpp
-    #src/unit-constructor1.cpp
-    #src/unit-constructor2.cpp
-    #src/unit-convenience.cpp
-    #src/unit-conversions.cpp
-    #src/unit-deserialization.cpp
-    #src/unit-element_access1.cpp
-    #src/unit-element_access2.cpp
-    #src/unit-inspection.cpp
-    #src/unit-items.cpp
-    #src/unit-iterators1.cpp
-    #src/unit-iterators2.cpp
-    #src/unit-json_patch.cpp
-    #src/unit-json_pointer.cpp
-    #src/unit-large_json.cpp
-    #src/unit-merge_patch.cpp
-    #src/unit-meta.cpp
-    #src/unit-modifiers.cpp
-    #src/unit-msgpack.cpp
-    #src/unit-noexcept.cpp
-    #src/unit-pointer_access.cpp
-    #src/unit-readme.cpp
-    #src/unit-reference_access.cpp
-    #src/unit-regression.cpp
-    #src/unit-serialization.cpp
-    #src/unit-testsuites.cpp
-    #src/unit-to_chars.cpp
-    #src/unit-ubjson.cpp
-    #src/unit-udt.cpp
-    #src/unit-unicode.cpp
-    #src/unit-user_defined_input.cpp
-    #src/unit-wstring.cpp
+    src/unit-allocator.cpp
+    src/unit-alt-string.cpp
+    src/unit-bson.cpp
+    src/unit-capacity.cpp
+    src/unit-cbor.cpp
+    src/unit-class_const_iterator.cpp
+    src/unit-class_iterator.cpp
+    src/unit-class_lexer.cpp
+    src/unit-class_parser.cpp
+    src/unit-comparison.cpp
+    src/unit-concepts.cpp
+    src/unit-constructor1.cpp
+    src/unit-constructor2.cpp
+    src/unit-convenience.cpp
+    src/unit-conversions.cpp
+    src/unit-deserialization.cpp
+    src/unit-element_access1.cpp
+    src/unit-element_access2.cpp
+    src/unit-inspection.cpp
+    src/unit-items.cpp
+    src/unit-iterators1.cpp
+    src/unit-iterators2.cpp
+    src/unit-json_patch.cpp
+    src/unit-json_pointer.cpp
+    src/unit-large_json.cpp
+    src/unit-merge_patch.cpp
+    #src/unit-meta.cpp - API not required/supported in Azure::Core::Internal::Json
+    src/unit-modifiers.cpp
+    src/unit-msgpack.cpp
+    src/unit-noexcept.cpp
+    src/unit-pointer_access.cpp
+    src/unit-readme.cpp
+    src/unit-reference_access.cpp
+    #src/unit-regression.cpp  -  No need to check for regressions as this version is unique
+    src/unit-serialization.cpp
+    src/unit-testsuites.cpp
+    src/unit-to_chars.cpp
+    src/unit-ubjson.cpp
+    src/unit-udt.cpp
+    src/unit-unicode.cpp
+    src/unit-user_defined_input.cpp
+    src/unit-wstring.cpp
     )
 
 foreach(file ${files})
     get_filename_component(file_basename ${file} NAME_WE)
-    string(REGEX REPLACE "unit-([^$]+)" "test-\\1" testcase ${file_basename})
+    string(REGEX REPLACE "unit-([^$]+)" "json-test-\\1" testcase ${file_basename})
 
     add_executable(${testcase} $<TARGET_OBJECTS:doctest_main> ${file})
     target_compile_definitions(${testcase} PRIVATE DOCTEST_CONFIG_SUPER_FAST_ASSERTS)
@@ -186,7 +186,7 @@ add_dependencies(json_unit download_test_data)
 # Test the generated build configs
 #############################################################################
 
-add_subdirectory(cmake_import)
-add_subdirectory(cmake_import_minver)
-add_subdirectory(cmake_add_subdirectory)
-add_subdirectory(cmake_fetch_content)
+#add_subdirectory(cmake_import)
+#add_subdirectory(cmake_import_minver)
+#add_subdirectory(cmake_add_subdirectory)
+#add_subdirectory(cmake_fetch_content)

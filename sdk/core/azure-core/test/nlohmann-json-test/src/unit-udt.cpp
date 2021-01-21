@@ -122,14 +122,14 @@ template <typename BasicJsonType> static void to_json(BasicJsonType& j, const pe
   j = BasicJsonType{{"age", p.m_age}, {"name", p.m_name}, {"country", p.m_country}};
 }
 
-static void to_json(nlohmann::json& j, const address& a) { j = a.m_val; }
+static void to_json(Azure::Core::Internal::Json::json& j, const address& a) { j = a.m_val; }
 
-static void to_json(nlohmann::json& j, const contact& c)
+static void to_json(Azure::Core::Internal::Json::json& j, const contact& c)
 {
   j = json{{"person", c.m_person}, {"address", c.m_address}};
 }
 
-static void to_json(nlohmann::json& j, const contact_book& cb)
+static void to_json(Azure::Core::Internal::Json::json& j, const contact_book& cb)
 {
   j = json{{"name", cb.m_book_name}, {"contacts", cb.m_contacts}};
 }
@@ -189,15 +189,18 @@ template <typename BasicJsonType> static void from_json(const BasicJsonType& j, 
   p.m_country = j["country"].template get<country>();
 }
 
-static void from_json(const nlohmann::json& j, address& a) { a.m_val = j.get<std::string>(); }
+static void from_json(const Azure::Core::Internal::Json::json& j, address& a)
+{
+  a.m_val = j.get<std::string>();
+}
 
-static void from_json(const nlohmann::json& j, contact& c)
+static void from_json(const Azure::Core::Internal::Json::json& j, contact& c)
 {
   c.m_person = j["person"].get<person>();
   c.m_address = j["address"].get<address>();
 }
 
-static void from_json(const nlohmann::json& j, contact_book& cb)
+static void from_json(const Azure::Core::Internal::Json::json& j, contact_book& cb)
 {
   cb.m_book_name = j["name"].get<name>();
   cb.m_contacts = j["contacts"].get<std::vector<contact>>();
@@ -309,44 +312,44 @@ struct legacy_type
 };
 } // namespace udt
 
-namespace nlohmann {
-template <typename T> struct adl_serializer<std::shared_ptr<T>>
-{
-  static void to_json(json& j, const std::shared_ptr<T>& opt)
+namespace Azure { namespace Core { namespace Internal { namespace Json {
+  template <typename T> struct adl_serializer<std::shared_ptr<T>>
   {
-    if (opt)
+    static void to_json(json& j, const std::shared_ptr<T>& opt)
     {
-      j = *opt;
+      if (opt)
+      {
+        j = *opt;
+      }
+      else
+      {
+        j = nullptr;
+      }
     }
-    else
-    {
-      j = nullptr;
-    }
-  }
 
-  static void from_json(const json& j, std::shared_ptr<T>& opt)
+    static void from_json(const json& j, std::shared_ptr<T>& opt)
+    {
+      if (j.is_null())
+      {
+        opt = nullptr;
+      }
+      else
+      {
+        opt.reset(new T(j.get<T>()));
+      }
+    }
+  };
+
+  template <> struct adl_serializer<udt::legacy_type>
   {
-    if (j.is_null())
-    {
-      opt = nullptr;
-    }
-    else
-    {
-      opt.reset(new T(j.get<T>()));
-    }
-  }
-};
+    static void to_json(json& j, const udt::legacy_type& l) { j = std::stoi(l.number); }
 
-template <> struct adl_serializer<udt::legacy_type>
-{
-  static void to_json(json& j, const udt::legacy_type& l) { j = std::stoi(l.number); }
-
-  static void from_json(const json& j, udt::legacy_type& l)
-  {
-    l.number = std::to_string(j.get<int>());
-  }
-};
-} // namespace nlohmann
+    static void from_json(const json& j, udt::legacy_type& l)
+    {
+      l.number = std::to_string(j.get<int>());
+    }
+  };
+}}}} // namespace Azure::Core::Internal::Json
 
 TEST_CASE("adl_serializer specialization" * doctest::test_suite("udt"))
 {
@@ -400,18 +403,18 @@ TEST_CASE("adl_serializer specialization" * doctest::test_suite("udt"))
   }
 }
 
-namespace nlohmann {
-template <> struct adl_serializer<std::vector<float>>
-{
-  using type = std::vector<float>;
-  static void to_json(json& j, const type&) { j = "hijacked!"; }
+namespace Azure { namespace Core { namespace Internal { namespace Json {
+  template <> struct adl_serializer<std::vector<float>>
+  {
+    using type = std::vector<float>;
+    static void to_json(json& j, const type&) { j = "hijacked!"; }
 
-  static void from_json(const json&, type& opt) { opt = {42.0, 42.0, 42.0}; }
+    static void from_json(const json&, type& opt) { opt = {42.0, 42.0, 42.0}; }
 
-  // preferred version
-  static type from_json(const json&) { return {4.0, 5.0, 6.0}; }
-};
-} // namespace nlohmann
+    // preferred version
+    static type from_json(const json&) { return {4.0, 5.0, 6.0}; }
+  };
+}}}} // namespace Azure::Core::Internal::Json
 
 TEST_CASE("even supported types can be specialized" * doctest::test_suite("udt"))
 {
@@ -422,35 +425,35 @@ TEST_CASE("even supported types can be specialized" * doctest::test_suite("udt")
   CHECK((f == std::vector<float>{4.0, 5.0, 6.0}));
 }
 
-namespace nlohmann {
-template <typename T> struct adl_serializer<std::unique_ptr<T>>
-{
-  static void to_json(json& j, const std::unique_ptr<T>& opt)
+namespace Azure { namespace Core { namespace Internal { namespace Json {
+  template <typename T> struct adl_serializer<std::unique_ptr<T>>
   {
-    if (opt)
+    static void to_json(json& j, const std::unique_ptr<T>& opt)
     {
-      j = *opt;
+      if (opt)
+      {
+        j = *opt;
+      }
+      else
+      {
+        j = nullptr;
+      }
     }
-    else
-    {
-      j = nullptr;
-    }
-  }
 
-  // this is the overload needed for non-copyable types,
-  static std::unique_ptr<T> from_json(const json& j)
-  {
-    if (j.is_null())
+    // this is the overload needed for non-copyable types,
+    static std::unique_ptr<T> from_json(const json& j)
     {
-      return nullptr;
+      if (j.is_null())
+      {
+        return nullptr;
+      }
+      else
+      {
+        return std::unique_ptr<T>(new T(j.get<T>()));
+      }
     }
-    else
-    {
-      return std::unique_ptr<T>(new T(j.get<T>()));
-    }
-  }
-};
-} // namespace nlohmann
+  };
+}}}} // namespace Azure::Core::Internal::Json
 
 TEST_CASE("Non-copyable types" * doctest::test_suite("udt"))
 {
@@ -496,7 +499,7 @@ template <typename T, typename = void> struct pod_serializer
       = 0>
   static void from_json(const BasicJsonType& j, U& t)
   {
-    using nlohmann::from_json;
+    using Azure::Core::Internal::Json::from_json;
     from_json(j, t);
   }
 
@@ -515,7 +518,7 @@ template <typename T, typename = void> struct pod_serializer
     // Why cannot we simply use: j.get<std::uint64_t>() ?
     // Well, with the current experiment, the get method looks for a from_json
     // function, which we are currently defining!
-    // This would end up in a stack overflow. Calling nlohmann::from_json is a
+    // This would end up in a stack overflow. Calling Azure::Core::Internal::Json::from_json is a
     // workaround (is it?).
     // I shall find a good way to avoid this once all constructors are converted
     // to free methods
@@ -523,7 +526,7 @@ template <typename T, typename = void> struct pod_serializer
     // In short, constructing a json by constructor calls to_json
     // calling get calls from_json, for now, we cannot do this in custom
     // serializers
-    nlohmann::from_json(j, value);
+    Azure::Core::Internal::Json::from_json(j, value);
     auto bytes = static_cast<char*>(static_cast<void*>(&value));
     std::memcpy(&t, bytes, sizeof(value));
   }
@@ -535,7 +538,7 @@ template <typename T, typename = void> struct pod_serializer
       = 0>
   static void to_json(BasicJsonType& j, const T& t)
   {
-    using nlohmann::to_json;
+    using Azure::Core::Internal::Json::to_json;
     to_json(j, t);
   }
 
@@ -548,7 +551,7 @@ template <typename T, typename = void> struct pod_serializer
     auto bytes = static_cast<const unsigned char*>(static_cast<const void*>(&t));
     std::uint64_t value;
     std::memcpy(&value, bytes, sizeof(value));
-    nlohmann::to_json(j, value);
+    Azure::Core::Internal::Json::to_json(j, value);
   }
 };
 
@@ -592,7 +595,7 @@ static std::ostream& operator<<(std::ostream& os, small_pod l)
 
 TEST_CASE("custom serializer for pods" * doctest::test_suite("udt"))
 {
-  using custom_json = nlohmann::basic_json<
+  using custom_json = Azure::Core::Internal::Json::basic_json<
       std::map,
       std::vector,
       std::string,
@@ -618,7 +621,7 @@ TEST_CASE("custom serializer for pods" * doctest::test_suite("udt"))
 
 template <typename T, typename> struct another_adl_serializer;
 
-using custom_json = nlohmann::basic_json<
+using custom_json = Azure::Core::Internal::Json::basic_json<
     std::map,
     std::vector,
     std::string,
@@ -633,13 +636,13 @@ template <typename T, typename> struct another_adl_serializer
 {
   static void from_json(const custom_json& j, T& t)
   {
-    using nlohmann::from_json;
+    using Azure::Core::Internal::Json::from_json;
     from_json(j, t);
   }
 
   static void to_json(custom_json& j, const T& t)
   {
-    using nlohmann::to_json;
+    using Azure::Core::Internal::Json::to_json;
     to_json(j, t);
   }
 };

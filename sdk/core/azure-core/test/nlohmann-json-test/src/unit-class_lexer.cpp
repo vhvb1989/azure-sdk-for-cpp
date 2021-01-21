@@ -39,8 +39,8 @@ namespace {
 json::lexer::token_type scan_string(const char* s);
 json::lexer::token_type scan_string(const char* s)
 {
-  auto ia = nlohmann::detail::input_adapter(s);
-  return nlohmann::detail::lexer<json, decltype(ia)>(std::move(ia)).scan();
+  auto ia = Azure::Core::Internal::Json::detail::input_adapter(s);
+  return Azure::Core::Internal::Json::detail::lexer<json, decltype(ia)>(std::move(ia)).scan();
 }
 } // namespace
 

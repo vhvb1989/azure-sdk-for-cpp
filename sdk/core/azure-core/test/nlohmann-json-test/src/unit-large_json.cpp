@@ -44,6 +44,6 @@ TEST_CASE("tests on very large JSONs")
     std::fill(s.begin() + depth, s.end(), ']');
 
     json _;
-    CHECK_NOTHROW(_ = nlohmann::json::parse(s));
+    CHECK_NOTHROW(_ = json::parse(s));
   }
 }

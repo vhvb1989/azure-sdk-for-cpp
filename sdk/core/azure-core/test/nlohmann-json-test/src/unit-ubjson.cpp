@@ -1513,7 +1513,7 @@ TEST_CASE("UBJSON")
         CHECK_THROWS_AS(_ = json::from_ubjson(v_ubjson), json::out_of_range&);
 
         json j;
-        nlohmann::detail::json_sax_dom_callback_parser<json> scp(
+        Azure::Core::Internal::Json::detail::json_sax_dom_callback_parser<json> scp(
             j, [](int, json::parse_event_t, const json&) { return true; });
         CHECK_THROWS_AS(
             _ = json::sax_parse(v_ubjson, &scp, json::input_format_t::ubjson), json::out_of_range&);
@@ -1527,7 +1527,7 @@ TEST_CASE("UBJSON")
         CHECK_THROWS_AS(_ = json::from_ubjson(v_ubjson), json::out_of_range&);
 
         json j;
-        nlohmann::detail::json_sax_dom_callback_parser<json> scp(
+        Azure::Core::Internal::Json::detail::json_sax_dom_callback_parser<json> scp(
             j, [](int, json::parse_event_t, const json&) { return true; });
         CHECK_THROWS_AS(
             _ = json::sax_parse(v_ubjson, &scp, json::input_format_t::ubjson), json::out_of_range&);
