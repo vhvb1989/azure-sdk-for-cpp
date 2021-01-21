@@ -12,6 +12,7 @@
 #if LIBFUZZER_WINDOWS
 #include "FuzzerIO.h"
 #include "FuzzerInternal.h"
+#include <Psapi.h>
 #include <cassert>
 #include <chrono>
 #include <cstring>
@@ -22,14 +23,15 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <windows.h>
-#include <Psapi.h>
 
 namespace fuzzer {
 
 static const FuzzingOptions* HandlerOpt = nullptr;
 
-LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo) {
-  switch (ExceptionInfo->ExceptionRecord->ExceptionCode) {
+LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo)
+{
+  switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
+  {
     case EXCEPTION_ACCESS_VIOLATION:
     case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
     case EXCEPTION_STACK_OVERFLOW:
@@ -62,8 +64,10 @@ LONG CALLBACK ExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo) {
   return EXCEPTION_CONTINUE_SEARCH;
 }
 
-BOOL WINAPI CtrlHandler(DWORD dwCtrlType) {
-  switch (dwCtrlType) {
+BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
+{
+  switch (dwCtrlType)
+  {
     case CTRL_C_EVENT:
       if (HandlerOpt->HandleInt)
         Fuzzer::StaticInterruptCallback();
@@ -76,29 +80,33 @@ BOOL WINAPI CtrlHandler(DWORD dwCtrlType) {
   return FALSE;
 }
 
-void CALLBACK AlarmHandler(PVOID, BOOLEAN) {
-  Fuzzer::StaticAlarmCallback();
-}
+void CALLBACK AlarmHandler(PVOID, BOOLEAN) { Fuzzer::StaticAlarmCallback(); }
 
 class TimerQ {
   HANDLE TimerQueue;
- public:
-  TimerQ() : TimerQueue(NULL) {};
-  ~TimerQ() {
+
+public:
+  TimerQ() : TimerQueue(NULL){};
+  ~TimerQ()
+  {
     if (TimerQueue)
       DeleteTimerQueueEx(TimerQueue, NULL);
   };
-  void SetTimer(int Seconds) {
-    if (!TimerQueue) {
+  void SetTimer(int Seconds)
+  {
+    if (!TimerQueue)
+    {
       TimerQueue = CreateTimerQueue();
-      if (!TimerQueue) {
+      if (!TimerQueue)
+      {
         Printf("libFuzzer: CreateTimerQueue failed.\n");
         exit(1);
       }
     }
     HANDLE Timer;
-    if (!CreateTimerQueueTimer(&Timer, TimerQueue, AlarmHandler, NULL,
-        Seconds*1000, Seconds*1000, 0)) {
+    if (!CreateTimerQueueTimer(
+            &Timer, TimerQueue, AlarmHandler, NULL, Seconds * 1000, Seconds * 1000, 0))
+    {
       Printf("libFuzzer: CreateTimerQueueTimer failed.\n");
       exit(1);
     }
@@ -109,29 +117,31 @@ static TimerQ Timer;
 
 static void CrashHandler(int) { Fuzzer::StaticCrashSignalCallback(); }
 
-void SetSignalHandler(const FuzzingOptions& Options) {
+void SetSignalHandler(const FuzzingOptions& Options)
+{
   HandlerOpt = &Options;
 
   if (Options.UnitTimeoutSec > 0)
     Timer.SetTimer(Options.UnitTimeoutSec / 2 + 1);
 
   if (Options.HandleInt || Options.HandleTerm)
-    if (!SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
+    if (!SetConsoleCtrlHandler(CtrlHandler, TRUE))
+    {
       DWORD LastError = GetLastError();
-      Printf("libFuzzer: SetConsoleCtrlHandler failed (Error code: %lu).\n",
-        LastError);
+      Printf("libFuzzer: SetConsoleCtrlHandler failed (Error code: %lu).\n", LastError);
       exit(1);
     }
 
-  if (Options.HandleSegv || Options.HandleBus || Options.HandleIll ||
-      Options.HandleFpe)
-    if (!AddVectoredExceptionHandler(1, ExceptionHandler)) {
+  if (Options.HandleSegv || Options.HandleBus || Options.HandleIll || Options.HandleFpe)
+    if (!AddVectoredExceptionHandler(1, ExceptionHandler))
+    {
       Printf("libFuzzer: AddVectoredExceptionHandler failed.\n");
       exit(1);
     }
 
   if (Options.HandleAbrt)
-    if (SIG_ERR == signal(SIGABRT, CrashHandler)) {
+    if (SIG_ERR == signal(SIGABRT, CrashHandler))
+    {
       Printf("libFuzzer: signal failed with %d\n", errno);
       exit(1);
     }
@@ -141,26 +151,23 @@ void SleepSeconds(int Seconds) { Sleep(Seconds * 1000); }
 
 unsigned long GetPid() { return GetCurrentProcessId(); }
 
-size_t GetPeakRSSMb() {
+size_t GetPeakRSSMb()
+{
   PROCESS_MEMORY_COUNTERS info;
   if (!GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info)))
     return 0;
   return info.PeakWorkingSetSize >> 20;
 }
 
-FILE *OpenProcessPipe(const char *Command, const char *Mode) {
-  return _popen(Command, Mode);
-}
+FILE* OpenProcessPipe(const char* Command, const char* Mode) { return _popen(Command, Mode); }
 
-int ExecuteCommand(const std::string &Command) {
-  return system(Command.c_str());
-}
+int ExecuteCommand(const std::string& Command) { return system(Command.c_str()); }
 
-const void *SearchMemory(const void *Data, size_t DataLen, const void *Patt,
-                         size_t PattLen) {
+const void* SearchMemory(const void* Data, size_t DataLen, const void* Patt, size_t PattLen)
+{
   // TODO: make this implementation more efficient.
-  const char *Cdata = (const char *)Data;
-  const char *Cpatt = (const char *)Patt;
+  const char* Cdata = (const char*)Data;
+  const char* Cpatt = (const char*)Patt;
 
   if (!Data || !Patt || DataLen == 0 || PattLen == 0 || DataLen < PattLen)
     return NULL;
@@ -168,9 +175,9 @@ const void *SearchMemory(const void *Data, size_t DataLen, const void *Patt,
   if (PattLen == 1)
     return memchr(Data, *Cpatt, DataLen);
 
-  const char *End = Cdata + DataLen - PattLen + 1;
+  const char* End = Cdata + DataLen - PattLen + 1;
 
-  for (const char *It = Cdata; It < End; ++It)
+  for (const char* It = Cdata; It < End; ++It)
     if (It[0] == Cpatt[0] && memcmp(It, Cpatt, PattLen) == 0)
       return It;
 

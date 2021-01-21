@@ -21,18 +21,21 @@
 
 namespace fuzzer {
 
-static FILE *OutputFile = stderr;
+static FILE* OutputFile = stderr;
 
-long GetEpoch(const std::string &Path) {
+long GetEpoch(const std::string& Path)
+{
   struct stat St;
   if (stat(Path.c_str(), &St))
-    return 0;  // Can't stat, be conservative.
+    return 0; // Can't stat, be conservative.
   return St.st_mtime;
 }
 
-Unit FileToVector(const std::string &Path, size_t MaxSize, bool ExitOnError) {
+Unit FileToVector(const std::string& Path, size_t MaxSize, bool ExitOnError)
+{
   std::ifstream T(Path);
-  if (ExitOnError && !T) {
+  if (ExitOnError && !T)
+  {
     Printf("No such directory: %s; exiting\n", Path.c_str());
     exit(1);
   }
@@ -44,37 +47,44 @@ Unit FileToVector(const std::string &Path, size_t MaxSize, bool ExitOnError) {
 
   T.seekg(0, T.beg);
   Unit Res(FileLen);
-  T.read(reinterpret_cast<char *>(Res.data()), FileLen);
+  T.read(reinterpret_cast<char*>(Res.data()), FileLen);
   return Res;
 }
 
-std::string FileToString(const std::string &Path) {
+std::string FileToString(const std::string& Path)
+{
   std::ifstream T(Path);
-  return std::string((std::istreambuf_iterator<char>(T)),
-                     std::istreambuf_iterator<char>());
+  return std::string((std::istreambuf_iterator<char>(T)), std::istreambuf_iterator<char>());
 }
 
-void CopyFileToErr(const std::string &Path) {
-  Printf("%s", FileToString(Path).c_str());
-}
+void CopyFileToErr(const std::string& Path) { Printf("%s", FileToString(Path).c_str()); }
 
-void WriteToFile(const Unit &U, const std::string &Path) {
+void WriteToFile(const Unit& U, const std::string& Path)
+{
   // Use raw C interface because this function may be called from a sig handler.
-  FILE *Out = fopen(Path.c_str(), "w");
-  if (!Out) return;
+  FILE* Out = fopen(Path.c_str(), "w");
+  if (!Out)
+    return;
   fwrite(U.data(), sizeof(U[0]), U.size(), Out);
   fclose(Out);
 }
 
-void ReadDirToVectorOfUnits(const char *Path, std::vector<Unit> *V,
-                            long *Epoch, size_t MaxSize, bool ExitOnError) {
+void ReadDirToVectorOfUnits(
+    const char* Path,
+    std::vector<Unit>* V,
+    long* Epoch,
+    size_t MaxSize,
+    bool ExitOnError)
+{
   long E = Epoch ? *Epoch : 0;
   std::vector<std::string> Files;
-  ListFilesInDirRecursive(Path, Epoch, &Files, /*TopDir*/true);
+  ListFilesInDirRecursive(Path, Epoch, &Files, /*TopDir*/ true);
   size_t NumLoaded = 0;
-  for (size_t i = 0; i < Files.size(); i++) {
-    auto &X = Files[i];
-    if (Epoch && GetEpoch(X) < E) continue;
+  for (size_t i = 0; i < Files.size(); i++)
+  {
+    auto& X = Files[i];
+    if (Epoch && GetEpoch(X) < E)
+      continue;
     NumLoaded++;
     if ((NumLoaded & (NumLoaded - 1)) == 0 && NumLoaded >= 1024)
       Printf("Loaded %zd/%zd files from %s\n", NumLoaded, Files.size(), Path);
@@ -84,29 +94,31 @@ void ReadDirToVectorOfUnits(const char *Path, std::vector<Unit> *V,
   }
 }
 
-std::string DirPlusFile(const std::string &DirPath,
-                        const std::string &FileName) {
+std::string DirPlusFile(const std::string& DirPath, const std::string& FileName)
+{
   return DirPath + GetSeparator() + FileName;
 }
 
-void DupAndCloseStderr() {
+void DupAndCloseStderr()
+{
   int OutputFd = DuplicateFile(2);
-  if (OutputFd > 0) {
-    FILE *NewOutputFile = OpenFile(OutputFd, "w");
-    if (NewOutputFile) {
+  if (OutputFd > 0)
+  {
+    FILE* NewOutputFile = OpenFile(OutputFd, "w");
+    if (NewOutputFile)
+    {
       OutputFile = NewOutputFile;
       if (EF->__sanitizer_set_report_fd)
-        EF->__sanitizer_set_report_fd(reinterpret_cast<void *>(OutputFd));
+        EF->__sanitizer_set_report_fd(reinterpret_cast<void*>(OutputFd));
       CloseFile(2);
     }
   }
 }
 
-void CloseStdout() {
-  CloseFile(1);
-}
+void CloseStdout() { CloseFile(1); }
 
-void Printf(const char *Fmt, ...) {
+void Printf(const char* Fmt, ...)
+{
   va_list ap;
   va_start(ap, Fmt);
   vfprintf(OutputFile, Fmt, ap);
@@ -114,4 +126,4 @@ void Printf(const char *Fmt, ...) {
   fflush(OutputFile);
 }
 
-}  // namespace fuzzer
+} // namespace fuzzer

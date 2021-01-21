@@ -3,16 +3,18 @@
 
 // Simple test for a fuzzer. The fuzzer must find repeated bytes.
 #include <assert.h>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <cstddef>
 #include <iostream>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
+{
   assert(Data);
   // Looking for AAAAAAAAAAAAAAAAAAAAAA or some such.
   size_t CurA = 0, MaxA = 0;
-  for (size_t i = 0; i < Size; i++) {
+  for (size_t i = 0; i < Size; i++)
+  {
     // Make sure there are no conditionals in the loop so that
     // coverage can't help the fuzzer.
     int EQ = Data[i] == 'A';
@@ -20,10 +22,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     int GT = CurA > MaxA;
     MaxA = GT * CurA + (!GT) * MaxA;
   }
-  if (MaxA >= 20) {
+  if (MaxA >= 20)
+  {
     std::cout << "BINGO; Found the target (Max: " << MaxA << "), exiting\n";
     exit(0);
   }
   return 0;
 }
-

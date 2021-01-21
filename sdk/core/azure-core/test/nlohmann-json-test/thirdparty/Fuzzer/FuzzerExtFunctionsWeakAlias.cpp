@@ -16,13 +16,15 @@
 
 using namespace fuzzer;
 
-extern "C" {
+extern "C"
+{
 // Declare these symbols as weak to allow them to be optionally defined.
-#define EXT_FUNC(NAME, RETURN_TYPE, FUNC_SIG, WARN)                            \
-  RETURN_TYPE NAME##Def FUNC_SIG {                                             \
-    Printf("ERROR: Function \"%s\" not defined.\n", #NAME);                    \
-    exit(1);                                                                   \
-  }                                                                            \
+#define EXT_FUNC(NAME, RETURN_TYPE, FUNC_SIG, WARN) \
+  RETURN_TYPE NAME##Def FUNC_SIG \
+  { \
+    Printf("ERROR: Function \"%s\" not defined.\n", #NAME); \
+    exit(1); \
+  } \
   RETURN_TYPE NAME FUNC_SIG __attribute__((weak, alias(#NAME "Def")));
 
 #include "FuzzerExtFunctions.def"
@@ -30,9 +32,10 @@ extern "C" {
 #undef EXT_FUNC
 }
 
-template <typename T>
-static T *GetFnPtr(T *Fun, T *FunDef, const char *FnName, bool WarnIfMissing) {
-  if (Fun == FunDef) {
+template <typename T> static T* GetFnPtr(T* Fun, T* FunDef, const char* FnName, bool WarnIfMissing)
+{
+  if (Fun == FunDef)
+  {
     if (WarnIfMissing)
       Printf("WARNING: Failed to find function \"%s\".\n", FnName);
     return nullptr;
@@ -42,8 +45,9 @@ static T *GetFnPtr(T *Fun, T *FunDef, const char *FnName, bool WarnIfMissing) {
 
 namespace fuzzer {
 
-ExternalFunctions::ExternalFunctions() {
-#define EXT_FUNC(NAME, RETURN_TYPE, FUNC_SIG, WARN)                            \
+ExternalFunctions::ExternalFunctions()
+{
+#define EXT_FUNC(NAME, RETURN_TYPE, FUNC_SIG, WARN) \
   this->NAME = GetFnPtr<decltype(::NAME)>(::NAME, ::NAME##Def, #NAME, WARN);
 
 #include "FuzzerExtFunctions.def"

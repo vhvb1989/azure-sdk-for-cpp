@@ -20,13 +20,15 @@
 
 using namespace fuzzer;
 
-template <typename T>
-static T GetFnPtr(const char *FnName, bool WarnIfMissing) {
+template <typename T> static T GetFnPtr(const char* FnName, bool WarnIfMissing)
+{
   dlerror(); // Clear any previous errors.
-  void *Fn = dlsym(RTLD_DEFAULT, FnName);
-  if (Fn == nullptr) {
-    if (WarnIfMissing) {
-      const char *ErrorMsg = dlerror();
+  void* Fn = dlsym(RTLD_DEFAULT, FnName);
+  if (Fn == nullptr)
+  {
+    if (WarnIfMissing)
+    {
+      const char* ErrorMsg = dlerror();
       Printf("WARNING: Failed to find function \"%s\".", FnName);
       if (ErrorMsg)
         Printf(" Reason %s.", ErrorMsg);
@@ -38,8 +40,9 @@ static T GetFnPtr(const char *FnName, bool WarnIfMissing) {
 
 namespace fuzzer {
 
-ExternalFunctions::ExternalFunctions() {
-#define EXT_FUNC(NAME, RETURN_TYPE, FUNC_SIG, WARN)                            \
+ExternalFunctions::ExternalFunctions()
+{
+#define EXT_FUNC(NAME, RETURN_TYPE, FUNC_SIG, WARN) \
   this->NAME = GetFnPtr<decltype(ExternalFunctions::NAME)>(#NAME, WARN)
 
 #include "FuzzerExtFunctions.def"

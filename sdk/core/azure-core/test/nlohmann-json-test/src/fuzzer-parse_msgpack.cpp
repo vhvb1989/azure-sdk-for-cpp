@@ -19,50 +19,50 @@ Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 */
 
 #include <iostream>
-#include <sstream>
 #include <nlohmann/json.hpp>
+#include <sstream>
 
 using json = nlohmann::json;
 
 // see http://llvm.org/docs/LibFuzzer.html
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
+  try
+  {
+    // step 1: parse input
+    std::vector<uint8_t> vec1(data, data + size);
+    json j1 = json::from_msgpack(vec1);
+
     try
     {
-        // step 1: parse input
-        std::vector<uint8_t> vec1(data, data + size);
-        json j1 = json::from_msgpack(vec1);
+      // step 2: round trip
+      std::vector<uint8_t> vec2 = json::to_msgpack(j1);
 
-        try
-        {
-            // step 2: round trip
-            std::vector<uint8_t> vec2 = json::to_msgpack(j1);
+      // parse serialization
+      json j2 = json::from_msgpack(vec2);
 
-            // parse serialization
-            json j2 = json::from_msgpack(vec2);
-
-            // serializations must match
-            assert(json::to_msgpack(j2) == vec2);
-        }
-        catch (const json::parse_error&)
-        {
-            // parsing a MessagePack serialization must not fail
-            assert(false);
-        }
+      // serializations must match
+      assert(json::to_msgpack(j2) == vec2);
     }
     catch (const json::parse_error&)
     {
-        // parse errors are ok, because input may be random bytes
+      // parsing a MessagePack serialization must not fail
+      assert(false);
     }
-    catch (const json::type_error&)
-    {
-        // type errors can occur during parsing, too
-    }
-    catch (const json::out_of_range&)
-    {
-        // out of range errors may happen if provided sizes are excessive
-    }
+  }
+  catch (const json::parse_error&)
+  {
+    // parse errors are ok, because input may be random bytes
+  }
+  catch (const json::type_error&)
+  {
+    // type errors can occur during parsing, too
+  }
+  catch (const json::out_of_range&)
+  {
+    // out of range errors may happen if provided sizes are excessive
+  }
 
-    // return 0 - non-zero return values are reserved for future use
-    return 0;
+  // return 0 - non-zero return values are reserved for future use
+  return 0;
 }

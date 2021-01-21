@@ -33,14 +33,17 @@ SOFTWARE.
 
 using nlohmann::json;
 
-namespace
-{
+namespace {
 enum test
 {
 };
 
-struct pod {};
-struct pod_bis {};
+struct pod
+{
+};
+struct pod_bis
+{
+};
 
 void to_json(json&, pod) noexcept;
 void to_json(json&, pod_bis);
@@ -66,32 +69,44 @@ static_assert(noexcept(json(pod{})), "");
 static_assert(noexcept(j->get<pod>()), "");
 static_assert(not noexcept(j->get<pod_bis>()), "");
 static_assert(noexcept(json(pod{})), "");
-}
+} // namespace
 
 TEST_CASE("runtime checks")
 {
-    SECTION("nothrow-copy-constructible exceptions")
-    {
-        // for ERR60-CPP (https://github.com/nlohmann/json/issues/531):
-        // Exceptions should be nothrow-copy-constructible. However, compilers
-        // treat std::runtime_exception differently in this regard. Therefore,
-        // we can only demand nothrow-copy-constructibility for our exceptions
-        // if std::runtime_exception is.
-        CHECK(std::is_nothrow_copy_constructible<json::exception>::value == std::is_nothrow_copy_constructible<std::runtime_error>::value);
-        CHECK(std::is_nothrow_copy_constructible<json::parse_error>::value == std::is_nothrow_copy_constructible<std::runtime_error>::value);
-        CHECK(std::is_nothrow_copy_constructible<json::invalid_iterator>::value == std::is_nothrow_copy_constructible<std::runtime_error>::value);
-        CHECK(std::is_nothrow_copy_constructible<json::type_error>::value == std::is_nothrow_copy_constructible<std::runtime_error>::value);
-        CHECK(std::is_nothrow_copy_constructible<json::out_of_range>::value == std::is_nothrow_copy_constructible<std::runtime_error>::value);
-        CHECK(std::is_nothrow_copy_constructible<json::other_error>::value == std::is_nothrow_copy_constructible<std::runtime_error>::value);
-    }
+  SECTION("nothrow-copy-constructible exceptions")
+  {
+    // for ERR60-CPP (https://github.com/nlohmann/json/issues/531):
+    // Exceptions should be nothrow-copy-constructible. However, compilers
+    // treat std::runtime_exception differently in this regard. Therefore,
+    // we can only demand nothrow-copy-constructibility for our exceptions
+    // if std::runtime_exception is.
+    CHECK(
+        std::is_nothrow_copy_constructible<json::exception>::value
+        == std::is_nothrow_copy_constructible<std::runtime_error>::value);
+    CHECK(
+        std::is_nothrow_copy_constructible<json::parse_error>::value
+        == std::is_nothrow_copy_constructible<std::runtime_error>::value);
+    CHECK(
+        std::is_nothrow_copy_constructible<json::invalid_iterator>::value
+        == std::is_nothrow_copy_constructible<std::runtime_error>::value);
+    CHECK(
+        std::is_nothrow_copy_constructible<json::type_error>::value
+        == std::is_nothrow_copy_constructible<std::runtime_error>::value);
+    CHECK(
+        std::is_nothrow_copy_constructible<json::out_of_range>::value
+        == std::is_nothrow_copy_constructible<std::runtime_error>::value);
+    CHECK(
+        std::is_nothrow_copy_constructible<json::other_error>::value
+        == std::is_nothrow_copy_constructible<std::runtime_error>::value);
+  }
 
-    SECTION("silence -Wunneeded-internal-declaration errors")
-    {
-        j = nullptr;
-        json j2;
-        to_json(j2, pod());
-        to_json(j2, pod_bis());
-        from_json(j2, pod());
-        from_json(j2, pod_bis());
-    }
+  SECTION("silence -Wunneeded-internal-declaration errors")
+  {
+    j = nullptr;
+    json j2;
+    to_json(j2, pod());
+    to_json(j2, pod_bis());
+    from_json(j2, pod());
+    from_json(j2, pod_bis());
+  }
 }

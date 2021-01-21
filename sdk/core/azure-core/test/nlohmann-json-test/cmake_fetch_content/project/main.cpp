@@ -1,8 +1,8 @@
 #include <nlohmann/json.hpp>
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-    nlohmann::json j;
+  nlohmann::json j;
 
-    return 0;
+  return 0;
 }

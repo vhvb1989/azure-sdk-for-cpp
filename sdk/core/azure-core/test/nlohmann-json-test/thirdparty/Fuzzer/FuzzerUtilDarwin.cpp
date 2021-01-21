@@ -18,7 +18,7 @@
 #include <sys/wait.h>
 
 // There is no header for this on macOS so declare here
-extern "C" char **environ;
+extern "C" char** environ;
 
 namespace fuzzer {
 
@@ -36,7 +36,8 @@ static sigset_t OldBlockedSignalsSet;
 // signal handlers when the first thread enters and restores them when the last
 // thread finishes execution of the function and ensures this is not racey by
 // using a mutex.
-int ExecuteCommand(const std::string &Command) {
+int ExecuteCommand(const std::string& Command)
+{
   posix_spawnattr_t SpawnAttributes;
   if (posix_spawnattr_init(&SpawnAttributes))
     return -1;
@@ -44,18 +45,21 @@ int ExecuteCommand(const std::string &Command) {
   // enters.
   {
     std::lock_guard<std::mutex> Lock(SignalMutex);
-    if (ActiveThreadCount == 0) {
+    if (ActiveThreadCount == 0)
+    {
       static struct sigaction IgnoreSignalAction;
       sigset_t BlockedSignalsSet;
       memset(&IgnoreSignalAction, 0, sizeof(IgnoreSignalAction));
       IgnoreSignalAction.sa_handler = SIG_IGN;
 
-      if (sigaction(SIGINT, &IgnoreSignalAction, &OldSigIntAction) == -1) {
+      if (sigaction(SIGINT, &IgnoreSignalAction, &OldSigIntAction) == -1)
+      {
         Printf("Failed to ignore SIGINT\n");
         (void)posix_spawnattr_destroy(&SpawnAttributes);
         return -1;
       }
-      if (sigaction(SIGQUIT, &IgnoreSignalAction, &OldSigQuitAction) == -1) {
+      if (sigaction(SIGQUIT, &IgnoreSignalAction, &OldSigQuitAction) == -1)
+      {
         Printf("Failed to ignore SIGQUIT\n");
         // Try our best to restore the signal handlers.
         (void)sigaction(SIGINT, &OldSigIntAction, NULL);
@@ -65,8 +69,8 @@ int ExecuteCommand(const std::string &Command) {
 
       (void)sigemptyset(&BlockedSignalsSet);
       (void)sigaddset(&BlockedSignalsSet, SIGCHLD);
-      if (sigprocmask(SIG_BLOCK, &BlockedSignalsSet, &OldBlockedSignalsSet) ==
-          -1) {
+      if (sigprocmask(SIG_BLOCK, &BlockedSignalsSet, &OldBlockedSignalsSet) == -1)
+      {
         Printf("Failed to block SIGCHLD\n");
         // Try our best to restore the signal handlers.
         (void)sigaction(SIGQUIT, &OldSigQuitAction, NULL);
@@ -95,28 +99,34 @@ int ExecuteCommand(const std::string &Command) {
   (void)posix_spawnattr_setflags(&SpawnAttributes, SpawnFlags);
 
   pid_t Pid;
-  char **Environ = environ; // Read from global
-  const char *CommandCStr = Command.c_str();
-  const char *Argv[] = {"sh", "-c", CommandCStr, NULL};
+  char** Environ = environ; // Read from global
+  const char* CommandCStr = Command.c_str();
+  const char* Argv[] = {"sh", "-c", CommandCStr, NULL};
   int ErrorCode = 0, ProcessStatus = 0;
   // FIXME: We probably shouldn't hardcode the shell path.
-  ErrorCode = posix_spawn(&Pid, "/bin/sh", NULL, &SpawnAttributes,
-                          (char *const *)Argv, Environ);
+  ErrorCode = posix_spawn(&Pid, "/bin/sh", NULL, &SpawnAttributes, (char* const*)Argv, Environ);
   (void)posix_spawnattr_destroy(&SpawnAttributes);
-  if (!ErrorCode) {
+  if (!ErrorCode)
+  {
     pid_t SavedPid = Pid;
-    do {
+    do
+    {
       // Repeat until call completes uninterrupted.
       Pid = waitpid(SavedPid, &ProcessStatus, /*options=*/0);
     } while (Pid == -1 && errno == EINTR);
-    if (Pid == -1) {
+    if (Pid == -1)
+    {
       // Fail for some other reason.
       ProcessStatus = -1;
     }
-  } else if (ErrorCode == ENOMEM || ErrorCode == EAGAIN) {
+  }
+  else if (ErrorCode == ENOMEM || ErrorCode == EAGAIN)
+  {
     // Fork failure.
     ProcessStatus = -1;
-  } else {
+  }
+  else
+  {
     // Shell execution failure.
     ProcessStatus = W_EXITCODE(127, 0);
   }
@@ -126,17 +136,21 @@ int ExecuteCommand(const std::string &Command) {
   {
     std::lock_guard<std::mutex> Lock(SignalMutex);
     --ActiveThreadCount;
-    if (ActiveThreadCount == 0) {
+    if (ActiveThreadCount == 0)
+    {
       bool FailedRestore = false;
-      if (sigaction(SIGINT, &OldSigIntAction, NULL) == -1) {
+      if (sigaction(SIGINT, &OldSigIntAction, NULL) == -1)
+      {
         Printf("Failed to restore SIGINT handling\n");
         FailedRestore = true;
       }
-      if (sigaction(SIGQUIT, &OldSigQuitAction, NULL) == -1) {
+      if (sigaction(SIGQUIT, &OldSigQuitAction, NULL) == -1)
+      {
         Printf("Failed to restore SIGQUIT handling\n");
         FailedRestore = true;
       }
-      if (sigprocmask(SIG_BLOCK, &OldBlockedSignalsSet, NULL) == -1) {
+      if (sigprocmask(SIG_BLOCK, &OldBlockedSignalsSet, NULL) == -1)
+      {
         Printf("Failed to unblock SIGCHLD\n");
         FailedRestore = true;
       }

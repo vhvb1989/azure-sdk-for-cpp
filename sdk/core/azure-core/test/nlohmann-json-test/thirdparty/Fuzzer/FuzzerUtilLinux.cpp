@@ -15,9 +15,7 @@
 
 namespace fuzzer {
 
-int ExecuteCommand(const std::string &Command) {
-  return system(Command.c_str());
-}
+int ExecuteCommand(const std::string& Command) { return system(Command.c_str()); }
 
 } // namespace fuzzer
 

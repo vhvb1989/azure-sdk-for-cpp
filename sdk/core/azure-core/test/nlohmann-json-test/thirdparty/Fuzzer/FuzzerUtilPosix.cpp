@@ -29,41 +29,40 @@
 
 namespace fuzzer {
 
-static void AlarmHandler(int, siginfo_t *, void *) {
-  Fuzzer::StaticAlarmCallback();
-}
+static void AlarmHandler(int, siginfo_t*, void*) { Fuzzer::StaticAlarmCallback(); }
 
-static void CrashHandler(int, siginfo_t *, void *) {
-  Fuzzer::StaticCrashSignalCallback();
-}
+static void CrashHandler(int, siginfo_t*, void*) { Fuzzer::StaticCrashSignalCallback(); }
 
-static void InterruptHandler(int, siginfo_t *, void *) {
-  Fuzzer::StaticInterruptCallback();
-}
+static void InterruptHandler(int, siginfo_t*, void*) { Fuzzer::StaticInterruptCallback(); }
 
-static void SetSigaction(int signum,
-                         void (*callback)(int, siginfo_t *, void *)) {
+static void SetSigaction(int signum, void (*callback)(int, siginfo_t*, void*))
+{
   struct sigaction sigact;
   memset(&sigact, 0, sizeof(sigact));
   sigact.sa_sigaction = callback;
-  if (sigaction(signum, &sigact, 0)) {
+  if (sigaction(signum, &sigact, 0))
+  {
     Printf("libFuzzer: sigaction failed with %d\n", errno);
     exit(1);
   }
 }
 
-void SetTimer(int Seconds) {
-  struct itimerval T {
+void SetTimer(int Seconds)
+{
+  struct itimerval T
+  {
     {Seconds, 0}, { Seconds, 0 }
   };
-  if (setitimer(ITIMER_REAL, &T, nullptr)) {
+  if (setitimer(ITIMER_REAL, &T, nullptr))
+  {
     Printf("libFuzzer: setitimer failed with %d\n", errno);
     exit(1);
   }
   SetSigaction(SIGALRM, AlarmHandler);
 }
 
-void SetSignalHandler(const FuzzingOptions& Options) {
+void SetSignalHandler(const FuzzingOptions& Options)
+{
   if (Options.UnitTimeoutSec > 0)
     SetTimer(Options.UnitTimeoutSec / 2 + 1);
   if (Options.HandleInt)
@@ -82,20 +81,25 @@ void SetSignalHandler(const FuzzingOptions& Options) {
     SetSigaction(SIGFPE, CrashHandler);
 }
 
-void SleepSeconds(int Seconds) {
+void SleepSeconds(int Seconds)
+{
   sleep(Seconds); // Use C API to avoid coverage from instrumented libc++.
 }
 
 unsigned long GetPid() { return (unsigned long)getpid(); }
 
-size_t GetPeakRSSMb() {
+size_t GetPeakRSSMb()
+{
   struct rusage usage;
   if (getrusage(RUSAGE_SELF, &usage))
     return 0;
-  if (LIBFUZZER_LINUX) {
+  if (LIBFUZZER_LINUX)
+  {
     // ru_maxrss is in KiB
     return usage.ru_maxrss >> 10;
-  } else if (LIBFUZZER_APPLE) {
+  }
+  else if (LIBFUZZER_APPLE)
+  {
     // ru_maxrss is in bytes
     return usage.ru_maxrss >> 20;
   }
@@ -103,15 +107,13 @@ size_t GetPeakRSSMb() {
   return 0;
 }
 
-FILE *OpenProcessPipe(const char *Command, const char *Mode) {
-  return popen(Command, Mode);
-}
+FILE* OpenProcessPipe(const char* Command, const char* Mode) { return popen(Command, Mode); }
 
-const void *SearchMemory(const void *Data, size_t DataLen, const void *Patt,
-                         size_t PattLen) {
+const void* SearchMemory(const void* Data, size_t DataLen, const void* Patt, size_t PattLen)
+{
   return memmem(Data, DataLen, Patt, PattLen);
 }
 
-}  // namespace fuzzer
+} // namespace fuzzer
 
 #endif // LIBFUZZER_POSIX

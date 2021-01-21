@@ -3,13 +3,15 @@
 
 // Threaded test for a fuzzer. The fuzzer should not crash.
 #include <assert.h>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <thread>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
-  if (Size < 8) return 0;
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* Data, size_t Size)
+{
+  if (Size < 8)
+    return 0;
   assert(Data);
   auto C = [&] {
     size_t Res = 0;
@@ -17,10 +19,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
       Res += memcmp(Data, Data + Size / 2, 4);
     return Res;
   };
-  std::thread T[] = {std::thread(C), std::thread(C), std::thread(C),
-                     std::thread(C), std::thread(C), std::thread(C)};
-  for (auto &X : T)
+  std::thread T[]
+      = {std::thread(C),
+         std::thread(C),
+         std::thread(C),
+         std::thread(C),
+         std::thread(C),
+         std::thread(C)};
+  for (auto& X : T)
     X.join();
   return 0;
 }
-
