@@ -29,535 +29,535 @@ SOFTWARE.
 
 #include "doctest_compatibility.h"
 
-#include <nlohmann/json.hpp>
-using nlohmann::json;
+#include <azure/core/internal/json.hpp>
+using Azure::Core::Internal::Json::json;
 
 TEST_CASE("capacity")
 {
-    SECTION("empty()")
+  SECTION("empty()")
+  {
+    SECTION("boolean")
     {
-        SECTION("boolean")
-        {
-            json j = true;
-            const json j_const(j);
+      json j = true;
+      const json j_const(j);
 
-            SECTION("result of empty")
-            {
-                CHECK(j.empty() == false);
-                CHECK(j_const.empty() == false);
-            }
+      SECTION("result of empty")
+      {
+        CHECK(j.empty() == false);
+        CHECK(j_const.empty() == false);
+      }
 
-            SECTION("definition of empty")
-            {
-                CHECK(j.empty() == (j.begin() == j.end()));
-                CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-            }
-        }
-
-        SECTION("string")
-        {
-            json j = "hello world";
-            const json j_const(j);
-
-            SECTION("result of empty")
-            {
-                CHECK(j.empty() == false);
-                CHECK(j_const.empty() == false);
-            }
-
-            SECTION("definition of empty")
-            {
-                CHECK(j.empty() == (j.begin() == j.end()));
-                CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-            }
-        }
-
-        SECTION("array")
-        {
-            SECTION("empty array")
-            {
-                json j = json::array();
-                const json j_const(j);
-
-                SECTION("result of empty")
-                {
-                    CHECK(j.empty() == true);
-                    CHECK(j_const.empty() == true);
-                }
-
-                SECTION("definition of empty")
-                {
-                    CHECK(j.empty() == (j.begin() == j.end()));
-                    CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-                }
-            }
-
-            SECTION("filled array")
-            {
-                json j = {1, 2, 3};
-                const json j_const(j);
-
-                SECTION("result of empty")
-                {
-                    CHECK(j.empty() == false);
-                    CHECK(j_const.empty() == false);
-                }
-
-                SECTION("definition of empty")
-                {
-                    CHECK(j.empty() == (j.begin() == j.end()));
-                    CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-                }
-            }
-        }
-
-        SECTION("object")
-        {
-            SECTION("empty object")
-            {
-                json j = json::object();
-                const json j_const(j);
-
-                SECTION("result of empty")
-                {
-                    CHECK(j.empty() == true);
-                    CHECK(j_const.empty() == true);
-                }
-
-                SECTION("definition of empty")
-                {
-                    CHECK(j.empty() == (j.begin() == j.end()));
-                    CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-                }
-            }
-
-            SECTION("filled object")
-            {
-                json j = {{"one", 1}, {"two", 2}, {"three", 3}};
-                const json j_const(j);
-
-                SECTION("result of empty")
-                {
-                    CHECK(j.empty() == false);
-                    CHECK(j_const.empty() == false);
-                }
-
-                SECTION("definition of empty")
-                {
-                    CHECK(j.empty() == (j.begin() == j.end()));
-                    CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-                }
-            }
-        }
-
-        SECTION("number (integer)")
-        {
-            json j = -23;
-            const json j_const(j);
-
-            SECTION("result of empty")
-            {
-                CHECK(j.empty() == false);
-                CHECK(j_const.empty() == false);
-            }
-
-            SECTION("definition of empty")
-            {
-                CHECK(j.empty() == (j.begin() == j.end()));
-                CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-            }
-        }
-
-        SECTION("number (unsigned)")
-        {
-            json j = 23u;
-            const json j_const(j);
-
-            SECTION("result of empty")
-            {
-                CHECK(j.empty() == false);
-                CHECK(j_const.empty() == false);
-            }
-
-            SECTION("definition of empty")
-            {
-                CHECK(j.empty() == (j.begin() == j.end()));
-                CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-            }
-        }
-
-        SECTION("number (float)")
-        {
-            json j = 23.42;
-            const json j_const(j);
-
-            SECTION("result of empty")
-            {
-                CHECK(j.empty() == false);
-                CHECK(j_const.empty() == false);
-            }
-
-            SECTION("definition of empty")
-            {
-                CHECK(j.empty() == (j.begin() == j.end()));
-                CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-            }
-        }
-
-        SECTION("null")
-        {
-            json j = nullptr;
-            const json j_const(j);
-
-            SECTION("result of empty")
-            {
-                CHECK(j.empty() == true);
-                CHECK(j_const.empty() == true);
-            }
-
-            SECTION("definition of empty")
-            {
-                CHECK(j.empty() == (j.begin() == j.end()));
-                CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
-            }
-        }
+      SECTION("definition of empty")
+      {
+        CHECK(j.empty() == (j.begin() == j.end()));
+        CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+      }
     }
 
-    SECTION("size()")
+    SECTION("string")
     {
-        SECTION("boolean")
-        {
-            json j = true;
-            const json j_const(j);
+      json j = "hello world";
+      const json j_const(j);
 
-            SECTION("result of size")
-            {
-                CHECK(j.size() == 1);
-                CHECK(j_const.size() == 1);
-            }
+      SECTION("result of empty")
+      {
+        CHECK(j.empty() == false);
+        CHECK(j_const.empty() == false);
+      }
 
-            SECTION("definition of size")
-            {
-                CHECK(std::distance(j.begin(), j.end()) == j.size());
-                CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-            }
-        }
-
-        SECTION("string")
-        {
-            json j = "hello world";
-            const json j_const(j);
-
-            SECTION("result of size")
-            {
-                CHECK(j.size() == 1);
-                CHECK(j_const.size() == 1);
-            }
-
-            SECTION("definition of size")
-            {
-                CHECK(std::distance(j.begin(), j.end()) == j.size());
-                CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-            }
-        }
-
-        SECTION("array")
-        {
-            SECTION("empty array")
-            {
-                json j = json::array();
-                const json j_const(j);
-
-                SECTION("result of size")
-                {
-                    CHECK(j.size() == 0);
-                    CHECK(j_const.size() == 0);
-                }
-
-                SECTION("definition of size")
-                {
-                    CHECK(std::distance(j.begin(), j.end()) == j.size());
-                    CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                    CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                    CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-                }
-            }
-
-            SECTION("filled array")
-            {
-                json j = {1, 2, 3};
-                const json j_const(j);
-
-                SECTION("result of size")
-                {
-                    CHECK(j.size() == 3);
-                    CHECK(j_const.size() == 3);
-                }
-
-                SECTION("definition of size")
-                {
-                    CHECK(std::distance(j.begin(), j.end()) == j.size());
-                    CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                    CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                    CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-                }
-            }
-        }
-
-        SECTION("object")
-        {
-            SECTION("empty object")
-            {
-                json j = json::object();
-                const json j_const(j);
-
-                SECTION("result of size")
-                {
-                    CHECK(j.size() == 0);
-                    CHECK(j_const.size() == 0);
-                }
-
-                SECTION("definition of size")
-                {
-                    CHECK(std::distance(j.begin(), j.end()) == j.size());
-                    CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                    CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                    CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-                }
-            }
-
-            SECTION("filled object")
-            {
-                json j = {{"one", 1}, {"two", 2}, {"three", 3}};
-                const json j_const(j);
-
-                SECTION("result of size")
-                {
-                    CHECK(j.size() == 3);
-                    CHECK(j_const.size() == 3);
-                }
-
-                SECTION("definition of size")
-                {
-                    CHECK(std::distance(j.begin(), j.end()) == j.size());
-                    CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                    CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                    CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-                }
-            }
-        }
-
-        SECTION("number (integer)")
-        {
-            json j = -23;
-            const json j_const(j);
-
-            SECTION("result of size")
-            {
-                CHECK(j.size() == 1);
-                CHECK(j_const.size() == 1);
-            }
-
-            SECTION("definition of size")
-            {
-                CHECK(std::distance(j.begin(), j.end()) == j.size());
-                CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-            }
-        }
-
-        SECTION("number (unsigned)")
-        {
-            json j = 23u;
-            const json j_const(j);
-
-            SECTION("result of size")
-            {
-                CHECK(j.size() == 1);
-                CHECK(j_const.size() == 1);
-            }
-
-            SECTION("definition of size")
-            {
-                CHECK(std::distance(j.begin(), j.end()) == j.size());
-                CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-            }
-        }
-
-        SECTION("number (float)")
-        {
-            json j = 23.42;
-            const json j_const(j);
-
-            SECTION("result of size")
-            {
-                CHECK(j.size() == 1);
-                CHECK(j_const.size() == 1);
-            }
-
-            SECTION("definition of size")
-            {
-                CHECK(std::distance(j.begin(), j.end()) == j.size());
-                CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-            }
-        }
-
-        SECTION("null")
-        {
-            json j = nullptr;
-            const json j_const(j);
-
-            SECTION("result of size")
-            {
-                CHECK(j.size() == 0);
-                CHECK(j_const.size() == 0);
-            }
-
-            SECTION("definition of size")
-            {
-                CHECK(std::distance(j.begin(), j.end()) == j.size());
-                CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
-                CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
-                CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
-            }
-        }
+      SECTION("definition of empty")
+      {
+        CHECK(j.empty() == (j.begin() == j.end()));
+        CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+      }
     }
 
-    SECTION("max_size()")
+    SECTION("array")
     {
-        SECTION("boolean")
-        {
-            json j = true;
-            const json j_const(j);
+      SECTION("empty array")
+      {
+        json j = json::array();
+        const json j_const(j);
 
-            SECTION("result of max_size")
-            {
-                CHECK(j.max_size() == 1);
-                CHECK(j_const.max_size() == 1);
-            }
+        SECTION("result of empty")
+        {
+          CHECK(j.empty() == true);
+          CHECK(j_const.empty() == true);
         }
 
-        SECTION("string")
+        SECTION("definition of empty")
         {
-            json j = "hello world";
-            const json j_const(j);
+          CHECK(j.empty() == (j.begin() == j.end()));
+          CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+        }
+      }
 
-            SECTION("result of max_size")
-            {
-                CHECK(j.max_size() == 1);
-                CHECK(j_const.max_size() == 1);
-            }
+      SECTION("filled array")
+      {
+        json j = {1, 2, 3};
+        const json j_const(j);
+
+        SECTION("result of empty")
+        {
+          CHECK(j.empty() == false);
+          CHECK(j_const.empty() == false);
         }
 
-        SECTION("array")
+        SECTION("definition of empty")
         {
-            SECTION("empty array")
-            {
-                json j = json::array();
-                const json j_const(j);
-
-                SECTION("result of max_size")
-                {
-                    CHECK(j.max_size() >= j.size());
-                    CHECK(j_const.max_size() >= j_const.size());
-                }
-            }
-
-            SECTION("filled array")
-            {
-                json j = {1, 2, 3};
-                const json j_const(j);
-
-                SECTION("result of max_size")
-                {
-                    CHECK(j.max_size() >= j.size());
-                    CHECK(j_const.max_size() >= j_const.size());
-                }
-            }
+          CHECK(j.empty() == (j.begin() == j.end()));
+          CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
         }
-
-        SECTION("object")
-        {
-            SECTION("empty object")
-            {
-                json j = json::object();
-                const json j_const(j);
-
-                SECTION("result of max_size")
-                {
-                    CHECK(j.max_size() >= j.size());
-                    CHECK(j_const.max_size() >= j_const.size());
-                }
-            }
-
-            SECTION("filled object")
-            {
-                json j = {{"one", 1}, {"two", 2}, {"three", 3}};
-                const json j_const(j);
-
-                SECTION("result of max_size")
-                {
-                    CHECK(j.max_size() >= j.size());
-                    CHECK(j_const.max_size() >= j_const.size());
-                }
-            }
-        }
-
-        SECTION("number (integer)")
-        {
-            json j = -23;
-            const json j_const(j);
-
-            SECTION("result of max_size")
-            {
-                CHECK(j.max_size() == 1);
-                CHECK(j_const.max_size() == 1);
-            }
-        }
-
-        SECTION("number (unsigned)")
-        {
-            json j = 23u;
-            const json j_const(j);
-
-            SECTION("result of max_size")
-            {
-                CHECK(j.max_size() == 1);
-                CHECK(j_const.max_size() == 1);
-            }
-        }
-
-        SECTION("number (float)")
-        {
-            json j = 23.42;
-            const json j_const(j);
-
-            SECTION("result of max_size")
-            {
-                CHECK(j.max_size() == 1);
-                CHECK(j_const.max_size() == 1);
-            }
-        }
-
-        SECTION("null")
-        {
-            json j = nullptr;
-            const json j_const(j);
-
-            SECTION("result of max_size")
-            {
-                CHECK(j.max_size() == 0);
-                CHECK(j_const.max_size() == 0);
-            }
-        }
+      }
     }
+
+    SECTION("object")
+    {
+      SECTION("empty object")
+      {
+        json j = json::object();
+        const json j_const(j);
+
+        SECTION("result of empty")
+        {
+          CHECK(j.empty() == true);
+          CHECK(j_const.empty() == true);
+        }
+
+        SECTION("definition of empty")
+        {
+          CHECK(j.empty() == (j.begin() == j.end()));
+          CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+        }
+      }
+
+      SECTION("filled object")
+      {
+        json j = {{"one", 1}, {"two", 2}, {"three", 3}};
+        const json j_const(j);
+
+        SECTION("result of empty")
+        {
+          CHECK(j.empty() == false);
+          CHECK(j_const.empty() == false);
+        }
+
+        SECTION("definition of empty")
+        {
+          CHECK(j.empty() == (j.begin() == j.end()));
+          CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+        }
+      }
+    }
+
+    SECTION("number (integer)")
+    {
+      json j = -23;
+      const json j_const(j);
+
+      SECTION("result of empty")
+      {
+        CHECK(j.empty() == false);
+        CHECK(j_const.empty() == false);
+      }
+
+      SECTION("definition of empty")
+      {
+        CHECK(j.empty() == (j.begin() == j.end()));
+        CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+      }
+    }
+
+    SECTION("number (unsigned)")
+    {
+      json j = 23u;
+      const json j_const(j);
+
+      SECTION("result of empty")
+      {
+        CHECK(j.empty() == false);
+        CHECK(j_const.empty() == false);
+      }
+
+      SECTION("definition of empty")
+      {
+        CHECK(j.empty() == (j.begin() == j.end()));
+        CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+      }
+    }
+
+    SECTION("number (float)")
+    {
+      json j = 23.42;
+      const json j_const(j);
+
+      SECTION("result of empty")
+      {
+        CHECK(j.empty() == false);
+        CHECK(j_const.empty() == false);
+      }
+
+      SECTION("definition of empty")
+      {
+        CHECK(j.empty() == (j.begin() == j.end()));
+        CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+      }
+    }
+
+    SECTION("null")
+    {
+      json j = nullptr;
+      const json j_const(j);
+
+      SECTION("result of empty")
+      {
+        CHECK(j.empty() == true);
+        CHECK(j_const.empty() == true);
+      }
+
+      SECTION("definition of empty")
+      {
+        CHECK(j.empty() == (j.begin() == j.end()));
+        CHECK(j_const.empty() == (j_const.begin() == j_const.end()));
+      }
+    }
+  }
+
+  SECTION("size()")
+  {
+    SECTION("boolean")
+    {
+      json j = true;
+      const json j_const(j);
+
+      SECTION("result of size")
+      {
+        CHECK(j.size() == 1);
+        CHECK(j_const.size() == 1);
+      }
+
+      SECTION("definition of size")
+      {
+        CHECK(std::distance(j.begin(), j.end()) == j.size());
+        CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+        CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+        CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+      }
+    }
+
+    SECTION("string")
+    {
+      json j = "hello world";
+      const json j_const(j);
+
+      SECTION("result of size")
+      {
+        CHECK(j.size() == 1);
+        CHECK(j_const.size() == 1);
+      }
+
+      SECTION("definition of size")
+      {
+        CHECK(std::distance(j.begin(), j.end()) == j.size());
+        CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+        CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+        CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+      }
+    }
+
+    SECTION("array")
+    {
+      SECTION("empty array")
+      {
+        json j = json::array();
+        const json j_const(j);
+
+        SECTION("result of size")
+        {
+          CHECK(j.size() == 0);
+          CHECK(j_const.size() == 0);
+        }
+
+        SECTION("definition of size")
+        {
+          CHECK(std::distance(j.begin(), j.end()) == j.size());
+          CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+          CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+          CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+        }
+      }
+
+      SECTION("filled array")
+      {
+        json j = {1, 2, 3};
+        const json j_const(j);
+
+        SECTION("result of size")
+        {
+          CHECK(j.size() == 3);
+          CHECK(j_const.size() == 3);
+        }
+
+        SECTION("definition of size")
+        {
+          CHECK(std::distance(j.begin(), j.end()) == j.size());
+          CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+          CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+          CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+        }
+      }
+    }
+
+    SECTION("object")
+    {
+      SECTION("empty object")
+      {
+        json j = json::object();
+        const json j_const(j);
+
+        SECTION("result of size")
+        {
+          CHECK(j.size() == 0);
+          CHECK(j_const.size() == 0);
+        }
+
+        SECTION("definition of size")
+        {
+          CHECK(std::distance(j.begin(), j.end()) == j.size());
+          CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+          CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+          CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+        }
+      }
+
+      SECTION("filled object")
+      {
+        json j = {{"one", 1}, {"two", 2}, {"three", 3}};
+        const json j_const(j);
+
+        SECTION("result of size")
+        {
+          CHECK(j.size() == 3);
+          CHECK(j_const.size() == 3);
+        }
+
+        SECTION("definition of size")
+        {
+          CHECK(std::distance(j.begin(), j.end()) == j.size());
+          CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+          CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+          CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+        }
+      }
+    }
+
+    SECTION("number (integer)")
+    {
+      json j = -23;
+      const json j_const(j);
+
+      SECTION("result of size")
+      {
+        CHECK(j.size() == 1);
+        CHECK(j_const.size() == 1);
+      }
+
+      SECTION("definition of size")
+      {
+        CHECK(std::distance(j.begin(), j.end()) == j.size());
+        CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+        CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+        CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+      }
+    }
+
+    SECTION("number (unsigned)")
+    {
+      json j = 23u;
+      const json j_const(j);
+
+      SECTION("result of size")
+      {
+        CHECK(j.size() == 1);
+        CHECK(j_const.size() == 1);
+      }
+
+      SECTION("definition of size")
+      {
+        CHECK(std::distance(j.begin(), j.end()) == j.size());
+        CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+        CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+        CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+      }
+    }
+
+    SECTION("number (float)")
+    {
+      json j = 23.42;
+      const json j_const(j);
+
+      SECTION("result of size")
+      {
+        CHECK(j.size() == 1);
+        CHECK(j_const.size() == 1);
+      }
+
+      SECTION("definition of size")
+      {
+        CHECK(std::distance(j.begin(), j.end()) == j.size());
+        CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+        CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+        CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+      }
+    }
+
+    SECTION("null")
+    {
+      json j = nullptr;
+      const json j_const(j);
+
+      SECTION("result of size")
+      {
+        CHECK(j.size() == 0);
+        CHECK(j_const.size() == 0);
+      }
+
+      SECTION("definition of size")
+      {
+        CHECK(std::distance(j.begin(), j.end()) == j.size());
+        CHECK(std::distance(j_const.begin(), j_const.end()) == j_const.size());
+        CHECK(std::distance(j.rbegin(), j.rend()) == j.size());
+        CHECK(std::distance(j_const.crbegin(), j_const.crend()) == j_const.size());
+      }
+    }
+  }
+
+  SECTION("max_size()")
+  {
+    SECTION("boolean")
+    {
+      json j = true;
+      const json j_const(j);
+
+      SECTION("result of max_size")
+      {
+        CHECK(j.max_size() == 1);
+        CHECK(j_const.max_size() == 1);
+      }
+    }
+
+    SECTION("string")
+    {
+      json j = "hello world";
+      const json j_const(j);
+
+      SECTION("result of max_size")
+      {
+        CHECK(j.max_size() == 1);
+        CHECK(j_const.max_size() == 1);
+      }
+    }
+
+    SECTION("array")
+    {
+      SECTION("empty array")
+      {
+        json j = json::array();
+        const json j_const(j);
+
+        SECTION("result of max_size")
+        {
+          CHECK(j.max_size() >= j.size());
+          CHECK(j_const.max_size() >= j_const.size());
+        }
+      }
+
+      SECTION("filled array")
+      {
+        json j = {1, 2, 3};
+        const json j_const(j);
+
+        SECTION("result of max_size")
+        {
+          CHECK(j.max_size() >= j.size());
+          CHECK(j_const.max_size() >= j_const.size());
+        }
+      }
+    }
+
+    SECTION("object")
+    {
+      SECTION("empty object")
+      {
+        json j = json::object();
+        const json j_const(j);
+
+        SECTION("result of max_size")
+        {
+          CHECK(j.max_size() >= j.size());
+          CHECK(j_const.max_size() >= j_const.size());
+        }
+      }
+
+      SECTION("filled object")
+      {
+        json j = {{"one", 1}, {"two", 2}, {"three", 3}};
+        const json j_const(j);
+
+        SECTION("result of max_size")
+        {
+          CHECK(j.max_size() >= j.size());
+          CHECK(j_const.max_size() >= j_const.size());
+        }
+      }
+    }
+
+    SECTION("number (integer)")
+    {
+      json j = -23;
+      const json j_const(j);
+
+      SECTION("result of max_size")
+      {
+        CHECK(j.max_size() == 1);
+        CHECK(j_const.max_size() == 1);
+      }
+    }
+
+    SECTION("number (unsigned)")
+    {
+      json j = 23u;
+      const json j_const(j);
+
+      SECTION("result of max_size")
+      {
+        CHECK(j.max_size() == 1);
+        CHECK(j_const.max_size() == 1);
+      }
+    }
+
+    SECTION("number (float)")
+    {
+      json j = 23.42;
+      const json j_const(j);
+
+      SECTION("result of max_size")
+      {
+        CHECK(j.max_size() == 1);
+        CHECK(j_const.max_size() == 1);
+      }
+    }
+
+    SECTION("null")
+    {
+      json j = nullptr;
+      const json j_const(j);
+
+      SECTION("result of max_size")
+      {
+        CHECK(j.max_size() == 0);
+        CHECK(j_const.max_size() == 0);
+      }
+    }
+  }
 }

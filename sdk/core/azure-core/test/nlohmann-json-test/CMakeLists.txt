@@ -4,7 +4,7 @@ option(JSON_NoExceptions "Build test suite without exceptions" OFF)
 option(JSON_Coverage "Build test suite with coverage information" OFF)
 
 # download test data
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/download_test_data.cmake)
+include(download_test_data)
 
 # test fixture to download test data
 add_test(NAME "download_test_data" COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target download_test_data)
@@ -93,48 +93,49 @@ endif()
 
 set(files
     src/unit-algorithms.cpp
-    src/unit-allocator.cpp
-    src/unit-alt-string.cpp
-    src/unit-bson.cpp
-    src/unit-capacity.cpp
-    src/unit-cbor.cpp
-    src/unit-class_const_iterator.cpp
-    src/unit-class_iterator.cpp
-    src/unit-class_lexer.cpp
-    src/unit-class_parser.cpp
-    src/unit-comparison.cpp
-    src/unit-concepts.cpp
-    src/unit-constructor1.cpp
-    src/unit-constructor2.cpp
-    src/unit-convenience.cpp
-    src/unit-conversions.cpp
-    src/unit-deserialization.cpp
-    src/unit-element_access1.cpp
-    src/unit-element_access2.cpp
-    src/unit-inspection.cpp
-    src/unit-items.cpp
-    src/unit-iterators1.cpp
-    src/unit-iterators2.cpp
-    src/unit-json_patch.cpp
-    src/unit-json_pointer.cpp
-    src/unit-large_json.cpp
-    src/unit-merge_patch.cpp
-    src/unit-meta.cpp
-    src/unit-modifiers.cpp
-    src/unit-msgpack.cpp
-    src/unit-noexcept.cpp
-    src/unit-pointer_access.cpp
-    src/unit-readme.cpp
-    src/unit-reference_access.cpp
-    src/unit-regression.cpp
-    src/unit-serialization.cpp
-    src/unit-testsuites.cpp
-    src/unit-to_chars.cpp
-    src/unit-ubjson.cpp
-    src/unit-udt.cpp
-    src/unit-unicode.cpp
-    src/unit-user_defined_input.cpp
-    src/unit-wstring.cpp)
+    #src/unit-allocator.cpp
+    #src/unit-alt-string.cpp
+    #src/unit-bson.cpp
+    #src/unit-capacity.cpp
+    #src/unit-cbor.cpp
+    #src/unit-class_const_iterator.cpp
+    #src/unit-class_iterator.cpp
+    #src/unit-class_lexer.cpp
+    #src/unit-class_parser.cpp
+    #src/unit-comparison.cpp
+    #src/unit-concepts.cpp
+    #src/unit-constructor1.cpp
+    #src/unit-constructor2.cpp
+    #src/unit-convenience.cpp
+    #src/unit-conversions.cpp
+    #src/unit-deserialization.cpp
+    #src/unit-element_access1.cpp
+    #src/unit-element_access2.cpp
+    #src/unit-inspection.cpp
+    #src/unit-items.cpp
+    #src/unit-iterators1.cpp
+    #src/unit-iterators2.cpp
+    #src/unit-json_patch.cpp
+    #src/unit-json_pointer.cpp
+    #src/unit-large_json.cpp
+    #src/unit-merge_patch.cpp
+    #src/unit-meta.cpp
+    #src/unit-modifiers.cpp
+    #src/unit-msgpack.cpp
+    #src/unit-noexcept.cpp
+    #src/unit-pointer_access.cpp
+    #src/unit-readme.cpp
+    #src/unit-reference_access.cpp
+    #src/unit-regression.cpp
+    #src/unit-serialization.cpp
+    #src/unit-testsuites.cpp
+    #src/unit-to_chars.cpp
+    #src/unit-ubjson.cpp
+    #src/unit-udt.cpp
+    #src/unit-unicode.cpp
+    #src/unit-user_defined_input.cpp
+    #src/unit-wstring.cpp
+    )
 
 foreach(file ${files})
     get_filename_component(file_basename ${file} NAME_WE)
@@ -148,7 +149,7 @@ foreach(file ${files})
         $<$<CXX_COMPILER_ID:GNU>:-Wno-deprecated-declarations>
     )
     target_include_directories(${testcase} PRIVATE ${CMAKE_BINARY_DIR}/include thirdparty/doctest thirdparty/fifo_map)
-    target_link_libraries(${testcase} PRIVATE ${NLOHMANN_JSON_TARGET_NAME})
+    target_link_libraries(${testcase} PRIVATE ${NLOHMANN_JSON_TARGET_NAME} azure-core)
 
     if (JSON_Coverage)
         target_compile_options(${testcase} PRIVATE --coverage)

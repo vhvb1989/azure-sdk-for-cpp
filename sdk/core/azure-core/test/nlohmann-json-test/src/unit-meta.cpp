@@ -29,29 +29,23 @@ SOFTWARE.
 
 #include "doctest_compatibility.h"
 
-#include <nlohmann/json.hpp>
-using nlohmann::json;
+#include <azure/core/internal/json.hpp>
+using Azure::Core::Internal::Json::json;
 
 TEST_CASE("version information")
 {
-    SECTION("meta()")
-    {
-        json j = json::meta();
+  SECTION("meta()")
+  {
+    json j = json::meta();
 
-        CHECK(j["name"] == "JSON for Modern C++");
-        CHECK(j["copyright"] == "(C) 2013-2017 Niels Lohmann");
-        CHECK(j["url"] == "https://github.com/nlohmann/json");
-        CHECK(j["version"] == json(
-        {
-            {"string", "3.8.0"},
-            {"major", 3},
-            {"minor", 8},
-            {"patch", 0}
-        }));
+    CHECK(j["name"] == "JSON for Modern C++");
+    CHECK(j["copyright"] == "(C) 2013-2017 Niels Lohmann");
+    CHECK(j["url"] == "https://github.com/nlohmann/json");
+    CHECK(j["version"] == json({{"string", "3.8.0"}, {"major", 3}, {"minor", 8}, {"patch", 0}}));
 
-        CHECK(j.find("platform") != j.end());
-        CHECK(j.at("compiler").find("family") != j.at("compiler").end());
-        CHECK(j.at("compiler").find("version") != j.at("compiler").end());
-        CHECK(j.at("compiler").find("c++") != j.at("compiler").end());
-    }
+    CHECK(j.find("platform") != j.end());
+    CHECK(j.at("compiler").find("family") != j.at("compiler").end());
+    CHECK(j.at("compiler").find("version") != j.at("compiler").end());
+    CHECK(j.at("compiler").find("c++") != j.at("compiler").end());
+  }
 }

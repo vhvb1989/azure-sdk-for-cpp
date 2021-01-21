@@ -29,91 +29,77 @@ SOFTWARE.
 
 #include "doctest_compatibility.h"
 
-#include <nlohmann/json.hpp>
-using nlohmann::json;
+#include <azure/core/internal/json.hpp>
+using Azure::Core::Internal::Json::json;
 
 #include <list>
 
-namespace
-{
+namespace {
 TEST_CASE("Use arbitrary stdlib container")
 {
-    std::string raw_data = "[1,2,3,4]";
-    std::list<char> data(raw_data.begin(), raw_data.end());
+  std::string raw_data = "[1,2,3,4]";
+  std::list<char> data(raw_data.begin(), raw_data.end());
 
-    json as_json = json::parse(data.begin(), data.end());
-    CHECK(as_json.at(0) == 1);
-    CHECK(as_json.at(1) == 2);
-    CHECK(as_json.at(2) == 3);
-    CHECK(as_json.at(3) == 4);
+  json as_json = json::parse(data.begin(), data.end());
+  CHECK(as_json.at(0) == 1);
+  CHECK(as_json.at(1) == 2);
+  CHECK(as_json.at(2) == 3);
+  CHECK(as_json.at(3) == 4);
 }
 
 struct MyContainer
 {
-    const char* data;
+  const char* data;
 };
 
-const char* begin(const MyContainer& c)
-{
-    return c.data;
-}
+const char* begin(const MyContainer& c) { return c.data; }
 
-const char* end(const MyContainer& c)
-{
-    return c.data + strlen(c.data);
-}
+const char* end(const MyContainer& c) { return c.data + strlen(c.data); }
 
 TEST_CASE("Custom container")
 {
 
-    MyContainer data{"[1,2,3,4]"};
-    json as_json = json::parse(data);
-    CHECK(as_json.at(0) == 1);
-    CHECK(as_json.at(1) == 2);
-    CHECK(as_json.at(2) == 3);
-    CHECK(as_json.at(3) == 4);
-
+  MyContainer data{"[1,2,3,4]"};
+  json as_json = json::parse(data);
+  CHECK(as_json.at(0) == 1);
+  CHECK(as_json.at(1) == 2);
+  CHECK(as_json.at(2) == 3);
+  CHECK(as_json.at(3) == 4);
 }
 
 TEST_CASE("Custom iterator")
 {
-    const char* raw_data = "[1,2,3,4]";
+  const char* raw_data = "[1,2,3,4]";
 
-    struct MyIterator
+  struct MyIterator
+  {
+    using difference_type = std::size_t;
+    using value_type = char;
+    using pointer = const char*;
+    using reference = const char&;
+    using iterator_category = std::input_iterator_tag;
+
+    MyIterator& operator++()
     {
-        using difference_type = std::size_t;
-        using value_type = char;
-        using pointer = const char*;
-        using reference = const char&;
-        using iterator_category = std::input_iterator_tag;
+      ++ptr;
+      return *this;
+    }
 
-        MyIterator& operator++()
-        {
-            ++ptr;
-            return *this;
-        }
+    reference operator*() const { return *ptr; }
 
-        reference operator*() const
-        {
-            return *ptr;
-        }
+    bool operator!=(const MyIterator& rhs) const { return ptr != rhs.ptr; }
 
-        bool operator!=(const MyIterator& rhs) const
-        {
-            return ptr != rhs.ptr;
-        }
+    const char* ptr;
+  };
 
-        const char* ptr;
-    };
+  MyIterator begin{raw_data};
+  MyIterator end{raw_data + strlen(raw_data)};
 
-    MyIterator begin{raw_data};
-    MyIterator end{raw_data + strlen(raw_data)};
-
-    json as_json = json::parse(begin, end);
-    CHECK(as_json.at(0) == 1);
-    CHECK(as_json.at(1) == 2);
-    CHECK(as_json.at(2) == 3);
-    CHECK(as_json.at(3) == 4);
+  json as_json = json::parse(begin, end);
+  CHECK(as_json.at(0) == 1);
+  CHECK(as_json.at(1) == 2);
+  CHECK(as_json.at(2) == 3);
+  CHECK(as_json.at(3) == 4);
 }
 
 } // namespace
