@@ -4,7 +4,7 @@
 #include <azure/core/internal/json.hpp>
 #include <gtest/gtest.h>
 
-using json = Azure::Core::Internal::nlohmann::json;
+using json = Azure::Core::Internal::Json::json;
 
 // Just a simple test to ensure that Azure Core internal is wrapping nlohmann json
 TEST(Json, create)
