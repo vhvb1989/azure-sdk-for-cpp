@@ -69,4 +69,4 @@ add_subdirectory(sdk/storage)
 #add_subdirectory(sdk/template/azure-template)
 #add_subdirectory(sdk/keyvault)
 
-add_subdirectory(samples/Integration/third-party-app-using-same-json-lib)
+add_subdirectory(samples/integration/third-party-app-using-same-json-lib)
