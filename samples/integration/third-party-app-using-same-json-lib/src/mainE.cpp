@@ -8,9 +8,9 @@
  * @remark Set environment variable `STORAGE_CONNECTION_STRING` before running the application.
  *
  */
-#include <azure/storage/files/datalake.hpp>
+#include "nlohmann.hpp"
 
-#include <nlohmann/json.hpp>
+#include <azure/storage/files/datalake.hpp>
 
 #include <exception>
 #include <iostream>
@@ -31,8 +31,6 @@ int main(int argc, char* argv[])
 
   using namespace Azure::Storage::Files::DataLake;
   auto serviceClient = DataLakeServiceClient::CreateFromConnectionString("");
-  // Initializing a FileSystemClient that can then initialize the PathClient, FileClient,
-  // DirectoryClient.
   auto fileSystemClient = DataLakeFileSystemClient::CreateFromConnectionString("", "");
 
   std::cout << cj << " -- " << j;

@@ -34,18 +34,18 @@ if(NOT json_POPULATED)
   add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-# # application getting the SDK from source and nlohmann with fetch content
-# add_executable (
-#      application
-#      src/main
-# )
-# # Link to Azure SDK
-# target_link_libraries(application azure-storage-files-datalake nlohmann_json::nlohmann_json)
+# application getting the SDK from source and nlohmann with fetch content
+add_executable (
+     application
+     src/main
+)
+# Link to Azure SDK
+target_link_libraries(application azure-storage-files-datalake nlohmann_json::nlohmann_json)
 
 # application getting the SDK from source and nlohmann from local file
 add_executable (
      applicationE
-     src/main
+     src/mainE
 )
 
 # Link to Azure SDK
