@@ -193,7 +193,8 @@ namespace Azure { namespace Storage { namespace Blobs {
             = (options.Range.HasValue() ? options.Range.GetValue().Offset : 0) + retryInfo.Offset;
         if (options.Range.HasValue() && options.Range.GetValue().Length.HasValue())
         {
-          newOptions.Range.GetValue().Length = options.Range.GetValue().Length.GetValue() - retryInfo.Offset;
+          newOptions.Range.GetValue().Length
+              = options.Range.GetValue().Length.GetValue() - retryInfo.Offset;
         }
         if (!newOptions.AccessConditions.IfMatch.HasValue())
         {
@@ -283,8 +284,7 @@ namespace Azure { namespace Storage { namespace Blobs {
       ret.IsServerEncrypted = response->IsServerEncrypted;
       ret.EncryptionKeySha256 = std::move(response->EncryptionKeySha256);
       return Azure::Core::Response<Models::DownloadBlobToResult>(
-          std::move(ret),
-          std::make_unique<Azure::Core::Http::RawResponse>(std::move(response.GetRawResponse())));
+          std::move(ret), response.ExtractRawResponse());
     };
     auto ret = returnTypeConverter(firstChunk);
 
@@ -424,8 +424,7 @@ namespace Azure { namespace Storage { namespace Blobs {
       ret.IsServerEncrypted = response->IsServerEncrypted;
       ret.EncryptionKeySha256 = std::move(response->EncryptionKeySha256);
       return Azure::Core::Response<Models::DownloadBlobToResult>(
-          std::move(ret),
-          std::make_unique<Azure::Core::Http::RawResponse>(std::move(response.GetRawResponse())));
+          std::move(ret), response.ExtractRawResponse());
     };
     auto ret = returnTypeConverter(firstChunk);
 
@@ -633,8 +632,10 @@ namespace Azure { namespace Storage { namespace Blobs {
           && (e.ErrorCode == "BlobNotFound" || e.ErrorCode == "ContainerNotFound"))
       {
         Models::DeleteBlobResult ret;
+        ret.RequestId = e.RequestId;
         ret.Deleted = false;
-        return Azure::Core::Response<Models::DeleteBlobResult>(std::move(ret), std::move(e.RawResponse));
+        return Azure::Core::Response<Models::DeleteBlobResult>(
+            std::move(ret), std::move(e.RawResponse));
       }
       throw;
     }
@@ -645,84 +646,6 @@ namespace Azure { namespace Storage { namespace Blobs {
   {
     Details::BlobRestClient::Blob::UndeleteBlobOptions protocolLayerOptions;
     return Details::BlobRestClient::Blob::Undelete(
-        options.Context, *m_pipeline, m_blobUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::AcquireBlobLeaseResult> BlobClient::AcquireLease(
-      const std::string& proposedLeaseId,
-      int32_t duration,
-      const AcquireBlobLeaseOptions& options) const
-  {
-    Details::BlobRestClient::Blob::AcquireBlobLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.ProposedLeaseId = proposedLeaseId;
-    protocolLayerOptions.LeaseDuration = duration;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    protocolLayerOptions.IfMatch = options.AccessConditions.IfMatch;
-    protocolLayerOptions.IfNoneMatch = options.AccessConditions.IfNoneMatch;
-    protocolLayerOptions.IfTags = options.AccessConditions.TagConditions;
-    return Details::BlobRestClient::Blob::AcquireLease(
-        options.Context, *m_pipeline, m_blobUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::RenewBlobLeaseResult> BlobClient::RenewLease(
-      const std::string& leaseId,
-      const RenewBlobLeaseOptions& options) const
-  {
-    Details::BlobRestClient::Blob::RenewBlobLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.LeaseId = leaseId;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    protocolLayerOptions.IfMatch = options.AccessConditions.IfMatch;
-    protocolLayerOptions.IfNoneMatch = options.AccessConditions.IfNoneMatch;
-    protocolLayerOptions.IfTags = options.AccessConditions.TagConditions;
-    return Details::BlobRestClient::Blob::RenewLease(
-        options.Context, *m_pipeline, m_blobUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::ReleaseBlobLeaseResult> BlobClient::ReleaseLease(
-      const std::string& leaseId,
-      const ReleaseBlobLeaseOptions& options) const
-  {
-    Details::BlobRestClient::Blob::ReleaseBlobLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.LeaseId = leaseId;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    protocolLayerOptions.IfMatch = options.AccessConditions.IfMatch;
-    protocolLayerOptions.IfNoneMatch = options.AccessConditions.IfNoneMatch;
-    protocolLayerOptions.IfTags = options.AccessConditions.TagConditions;
-    return Details::BlobRestClient::Blob::ReleaseLease(
-        options.Context, *m_pipeline, m_blobUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::ChangeBlobLeaseResult> BlobClient::ChangeLease(
-      const std::string& leaseId,
-      const std::string& proposedLeaseId,
-      const ChangeBlobLeaseOptions& options) const
-  {
-    Details::BlobRestClient::Blob::ChangeBlobLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.LeaseId = leaseId;
-    protocolLayerOptions.ProposedLeaseId = proposedLeaseId;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    protocolLayerOptions.IfMatch = options.AccessConditions.IfMatch;
-    protocolLayerOptions.IfNoneMatch = options.AccessConditions.IfNoneMatch;
-    protocolLayerOptions.IfTags = options.AccessConditions.TagConditions;
-    return Details::BlobRestClient::Blob::ChangeLease(
-        options.Context, *m_pipeline, m_blobUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::BreakBlobLeaseResult> BlobClient::BreakLease(
-      const BreakBlobLeaseOptions& options) const
-  {
-    Details::BlobRestClient::Blob::BreakBlobLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.BreakPeriod = options.BreakPeriod;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    protocolLayerOptions.IfMatch = options.AccessConditions.IfMatch;
-    protocolLayerOptions.IfNoneMatch = options.AccessConditions.IfNoneMatch;
-    protocolLayerOptions.IfTags = options.AccessConditions.TagConditions;
-    return Details::BlobRestClient::Blob::BreakLease(
         options.Context, *m_pipeline, m_blobUrl, protocolLayerOptions);
   }
 

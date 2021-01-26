@@ -71,20 +71,12 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     DataLakeFileSystemClient GetFileSystemClient(const std::string& fileSystemName) const;
 
     /**
-     * @brief Gets the datalake service's primary uri endpoint. This is the endpoint used for blob
+     * @brief Gets the datalake service's primary url endpoint. This is the endpoint used for blob
      * storage available features in DataLake.
      *
-     * @return The datalake service's primary uri endpoint.
+     * @return The datalake service's primary url endpoint.
      */
-    std::string GetUri() const { return m_blobServiceClient.GetUrl(); }
-
-    /**
-     * @brief Gets the datalake service's primary uri endpoint. This is the endpoint used for dfs
-     * endpoint only operations
-     *
-     * @return The datalake service's primary uri endpoint.
-     */
-    std::string GetDfsUri() const { return m_dfsUri.GetAbsoluteUrl(); }
+    std::string GetUrl() const { return m_blobServiceClient.GetUrl(); }
 
     /**
      * @brief List the file systems from the service.
@@ -100,8 +92,6 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
      * @brief Retrieves a key that can be used to delegate Active Directory authorization to
      * shared access signatures.
      *
-     * @param startsOn Start time for the key's validity. The time should be specified in UTC, and
-     * will be truncated to second.
      * @param expiresOn Expiration of the key's validity. The time should be specified in UTC, and
      * will be truncated to second.
      * @param options Optional parameters to execute
@@ -111,15 +101,14 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
      * @remark This request is sent to blob endpoint.
      */
     Azure::Core::Response<Models::GetUserDelegationKeyResult> GetUserDelegationKey(
-        const Azure::Core::DateTime& startsOn,
         const Azure::Core::DateTime& expiresOn,
         const GetUserDelegationKeyOptions& options = GetUserDelegationKeyOptions()) const
     {
-      return m_blobServiceClient.GetUserDelegationKey(startsOn, expiresOn, options);
+      return m_blobServiceClient.GetUserDelegationKey(expiresOn, options);
     }
 
   private:
-    Azure::Core::Http::Url m_dfsUri;
+    Azure::Core::Http::Url m_dfsUrl;
     Blobs::BlobServiceClient m_blobServiceClient;
     std::shared_ptr<Azure::Core::Http::HttpPipeline> m_pipeline;
   };

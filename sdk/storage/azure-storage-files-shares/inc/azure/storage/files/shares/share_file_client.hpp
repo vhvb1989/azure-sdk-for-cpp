@@ -32,7 +32,7 @@ namespace Azure { namespace Storage { namespace Files { namespace Shares {
     static ShareFileClient CreateFromConnectionString(
         const std::string& connectionString,
         const std::string& shareName,
-        const std::string& filePath,
+        const std::string& fileName,
         const ShareClientOptions& options = ShareClientOptions());
 
     /**
@@ -57,11 +57,11 @@ namespace Azure { namespace Storage { namespace Files { namespace Shares {
         const ShareClientOptions& options = ShareClientOptions());
 
     /**
-     * @brief Gets the file's primary uri endpoint.
+     * @brief Gets the file's primary url endpoint.
      *
-     * @return The file's primary uri endpoint.
+     * @return The file's primary url endpoint.
      */
-    std::string GetUri() const { return m_shareFileUri.GetAbsoluteUrl(); }
+    std::string GetUrl() const { return m_shareFileUrl.GetAbsoluteUrl(); }
 
     /**
      * @brief Initializes a new instance of the ShareFileClient class with an identical uri
@@ -297,64 +297,19 @@ namespace Azure { namespace Storage { namespace Files { namespace Shares {
         const ForceCloseAllShareFileHandlesOptions& options
         = ForceCloseAllShareFileHandlesOptions()) const;
 
-    /**
-     * @brief Acquires an infinite lease on the file.
-     *
-     * @param proposedLeaseId Proposed lease ID, in a GUID string format.
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::AcquireShareFileLeaseResult> describing the lease.
-     */
-    Azure::Core::Response<Models::AcquireShareFileLeaseResult> AcquireLease(
-        const std::string& proposedLeaseId,
-        const AcquireShareFileLeaseOptions& options = AcquireShareFileLeaseOptions()) const;
-
-    /**
-     * @brief Releases the file's previously-acquired lease.
-     *
-     * @param leaseId ID of the previously-acquired lease.
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::ReleaseShareFileLeaseResult> describing the updated
-     * container.
-     */
-    Azure::Core::Response<Models::ReleaseShareFileLeaseResult> ReleaseLease(
-        const std::string& leaseId,
-        const ReleaseShareFileLeaseOptions& options = ReleaseShareFileLeaseOptions()) const;
-
-    /**
-     * @brief Changes the lease of an active lease.
-     *
-     * @param leaseId ID of the previously-acquired lease.
-     * @param proposedLeaseId Proposed lease ID, in a GUID string format.
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::ChangeShareFileLeaseResult> describing the changed
-     * lease.
-     */
-    Azure::Core::Response<Models::ChangeShareFileLeaseResult> ChangeLease(
-        const std::string& leaseId,
-        const std::string& proposedLeaseId,
-        const ChangeShareFileLeaseOptions& options = ChangeShareFileLeaseOptions()) const;
-
-    /**
-     * @brief Breaks the previously-acquired lease.
-     *
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::BreakShareFileLeaseResult> describing the broken lease.
-     */
-    Azure::Core::Response<Models::BreakShareFileLeaseResult> BreakLease(
-        const BreakShareFileLeaseOptions& options = BreakShareFileLeaseOptions()) const;
-
   private:
-    Azure::Core::Http::Url m_shareFileUri;
+    Azure::Core::Http::Url m_shareFileUrl;
     std::shared_ptr<Azure::Core::Http::HttpPipeline> m_pipeline;
 
     explicit ShareFileClient(
         Azure::Core::Http::Url shareFileUri,
         std::shared_ptr<Azure::Core::Http::HttpPipeline> pipeline)
-        : m_shareFileUri(std::move(shareFileUri)), m_pipeline(std::move(pipeline))
+        : m_shareFileUrl(std::move(shareFileUri)), m_pipeline(std::move(pipeline))
     {
     }
 
     friend class ShareClient;
     friend class ShareDirectoryClient;
+    friend class ShareLeaseClient;
   };
 }}}} // namespace Azure::Storage::Files::Shares

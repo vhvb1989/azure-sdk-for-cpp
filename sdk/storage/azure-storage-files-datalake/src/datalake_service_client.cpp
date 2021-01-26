@@ -31,20 +31,47 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
       }
       blobOptions.RetryOptions = options.RetryOptions;
       blobOptions.RetryOptions.SecondaryHostForRetryReads
-          = Details::GetBlobUriFromUri(options.RetryOptions.SecondaryHostForRetryReads);
+          = Details::GetBlobUrlFromUrl(options.RetryOptions.SecondaryHostForRetryReads);
       return blobOptions;
     }
 
-    std::vector<Models::FileSystem> FileSystemsFromContainerItems(
-        const std::vector<Blobs::Models::BlobContainerItem>& items)
+    std::vector<Models::FileSystemItem> FileSystemsFromContainerItems(
+        std::vector<Blobs::Models::BlobContainerItem> items)
     {
-      std::vector<Models::FileSystem> fileSystems;
-      for (const auto& item : items)
+      std::vector<Models::FileSystemItem> fileSystems;
+      for (auto& item : items)
       {
-        Models::FileSystem fileSystem;
-        fileSystem.ETag = item.ETag;
-        fileSystem.Name = item.Name;
-        fileSystem.LastModified = item.LastModified;
+        Models::FileSystemItem fileSystem;
+        fileSystem.Name = std::move(item.Name);
+        fileSystem.ETag = std::move(item.ETag);
+        fileSystem.LastModified = std::move(item.LastModified);
+        fileSystem.Metadata = std::move(item.Metadata);
+        if (item.AccessType == Blobs::Models::PublicAccessType::BlobContainer)
+        {
+          fileSystem.AccessType = Models::PublicAccessType::FileSystem;
+        }
+        else if (item.AccessType == Blobs::Models::PublicAccessType::Blob)
+        {
+          fileSystem.AccessType = Models::PublicAccessType::Path;
+        }
+        else if (item.AccessType == Blobs::Models::PublicAccessType::None)
+        {
+          fileSystem.AccessType = Models::PublicAccessType::None;
+        }
+        else
+        {
+          fileSystem.AccessType = Models::PublicAccessType(item.AccessType.Get());
+        }
+        fileSystem.HasImmutabilityPolicy = item.HasImmutabilityPolicy;
+        fileSystem.HasLegalHold = item.HasLegalHold;
+        if (item.LeaseDuration.HasValue())
+        {
+          fileSystem.LeaseDuration
+              = Models::LeaseDurationType((item.LeaseDuration.GetValue().Get()));
+        }
+        fileSystem.LeaseState = Models::LeaseStateType(item.LeaseState.Get());
+        fileSystem.LeaseStatus = Models::LeaseStatusType(item.LeaseStatus.Get());
+
         fileSystems.emplace_back(std::move(fileSystem));
       }
       return fileSystems;
@@ -73,8 +100,8 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
       const std::string& serviceUri,
       std::shared_ptr<StorageSharedKeyCredential> credential,
       const DataLakeClientOptions& options)
-      : m_dfsUri(Details::GetDfsUriFromUri(serviceUri)), m_blobServiceClient(
-                                                             Details::GetBlobUriFromUri(serviceUri),
+      : m_dfsUrl(Details::GetDfsUrlFromUrl(serviceUri)), m_blobServiceClient(
+                                                             Details::GetBlobUrlFromUrl(serviceUri),
                                                              credential,
                                                              GetBlobServiceClientOptions(options))
   {
@@ -88,7 +115,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     }
     StorageRetryWithSecondaryOptions dfsRetryOptions = options.RetryOptions;
     dfsRetryOptions.SecondaryHostForRetryReads
-        = Details::GetDfsUriFromUri(options.RetryOptions.SecondaryHostForRetryReads);
+        = Details::GetDfsUrlFromUrl(options.RetryOptions.SecondaryHostForRetryReads);
     policies.emplace_back(std::make_unique<Storage::Details::StorageRetryPolicy>(dfsRetryOptions));
     for (const auto& p : options.PerRetryPolicies)
     {
@@ -105,8 +132,8 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
       const std::string& serviceUri,
       std::shared_ptr<Core::TokenCredential> credential,
       const DataLakeClientOptions& options)
-      : m_dfsUri(Details::GetDfsUriFromUri(serviceUri)), m_blobServiceClient(
-                                                             Details::GetBlobUriFromUri(serviceUri),
+      : m_dfsUrl(Details::GetDfsUrlFromUrl(serviceUri)), m_blobServiceClient(
+                                                             Details::GetBlobUrlFromUrl(serviceUri),
                                                              credential,
                                                              GetBlobServiceClientOptions(options))
   {
@@ -120,7 +147,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     }
     StorageRetryWithSecondaryOptions dfsRetryOptions = options.RetryOptions;
     dfsRetryOptions.SecondaryHostForRetryReads
-        = Details::GetDfsUriFromUri(options.RetryOptions.SecondaryHostForRetryReads);
+        = Details::GetDfsUrlFromUrl(options.RetryOptions.SecondaryHostForRetryReads);
     policies.emplace_back(std::make_unique<Storage::Details::StorageRetryPolicy>(dfsRetryOptions));
     for (const auto& p : options.PerRetryPolicies)
     {
@@ -137,8 +164,8 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
   DataLakeServiceClient::DataLakeServiceClient(
       const std::string& serviceUri,
       const DataLakeClientOptions& options)
-      : m_dfsUri(Details::GetDfsUriFromUri(serviceUri)), m_blobServiceClient(
-                                                             Details::GetBlobUriFromUri(serviceUri),
+      : m_dfsUrl(Details::GetDfsUrlFromUrl(serviceUri)), m_blobServiceClient(
+                                                             Details::GetBlobUrlFromUrl(serviceUri),
                                                              GetBlobServiceClientOptions(options))
   {
     std::vector<std::unique_ptr<Azure::Core::Http::HttpPolicy>> policies;
@@ -151,7 +178,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     }
     StorageRetryWithSecondaryOptions dfsRetryOptions = options.RetryOptions;
     dfsRetryOptions.SecondaryHostForRetryReads
-        = Details::GetDfsUriFromUri(options.RetryOptions.SecondaryHostForRetryReads);
+        = Details::GetDfsUrlFromUrl(options.RetryOptions.SecondaryHostForRetryReads);
     policies.emplace_back(std::make_unique<Storage::Details::StorageRetryPolicy>(dfsRetryOptions));
     for (const auto& p : options.PerRetryPolicies)
     {
@@ -166,7 +193,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
   DataLakeFileSystemClient DataLakeServiceClient::GetFileSystemClient(
       const std::string& fileSystemName) const
   {
-    auto builder = m_dfsUri;
+    auto builder = m_dfsUrl;
     builder.AppendPath(Storage::Details::UrlEncodePath(fileSystemName));
     return DataLakeFileSystemClient(
         builder, m_blobServiceClient.GetBlobContainerClient(fileSystemName), m_pipeline);
@@ -177,6 +204,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
       const ListFileSystemsSinglePageOptions& options) const
   {
     Blobs::ListBlobContainersSinglePageOptions blobOptions;
+    blobOptions.Include = options.Include;
     blobOptions.Context = options.Context;
     blobOptions.Prefix = options.Prefix;
     blobOptions.ContinuationToken = options.ContinuationToken;
@@ -184,7 +212,11 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     auto result = m_blobServiceClient.ListBlobContainersSinglePage(blobOptions);
     auto response = Models::ListFileSystemsSinglePageResult();
     response.ContinuationToken = std::move(result->ContinuationToken);
-    response.Filesystems = FileSystemsFromContainerItems(result->Items);
+    response.PreviousContinuationToken = std::move(result->PreviousContinuationToken);
+    response.RequestId = std::move(result->RequestId);
+    response.ServiceEndpoint = std::move(result->ServiceEndpoint);
+    response.Prefix = std::move(result->Prefix);
+    response.Items = FileSystemsFromContainerItems(std::move(result->Items));
     return Azure::Core::Response<Models::ListFileSystemsSinglePageResult>(
         std::move(response), result.ExtractRawResponse());
   }

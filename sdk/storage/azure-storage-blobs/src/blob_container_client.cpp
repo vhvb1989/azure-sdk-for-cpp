@@ -164,6 +164,7 @@ namespace Azure { namespace Storage { namespace Blobs {
           && e.ErrorCode == "ContainerAlreadyExists")
       {
         Models::CreateBlobContainerResult ret;
+        ret.RequestId = e.RequestId;
         ret.Created = false;
         return Azure::Core::Response<Models::CreateBlobContainerResult>(
             std::move(ret), std::move(e.RawResponse));
@@ -196,6 +197,7 @@ namespace Azure { namespace Storage { namespace Blobs {
           && e.ErrorCode == "ContainerNotFound")
       {
         Models::DeleteBlobContainerResult ret;
+        ret.RequestId = e.RequestId;
         ret.Deleted = false;
         return Azure::Core::Response<Models::DeleteBlobContainerResult>(
             std::move(ret), std::move(e.RawResponse));
@@ -296,69 +298,6 @@ namespace Azure { namespace Storage { namespace Blobs {
     protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
     protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
     return Details::BlobRestClient::BlobContainer::SetAccessPolicy(
-        options.Context, *m_pipeline, m_blobContainerUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::AcquireBlobContainerLeaseResult> BlobContainerClient::AcquireLease(
-      const std::string& proposedLeaseId,
-      int32_t duration,
-      const AcquireBlobContainerLeaseOptions& options) const
-  {
-    Details::BlobRestClient::BlobContainer::AcquireBlobContainerLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.ProposedLeaseId = proposedLeaseId;
-    protocolLayerOptions.LeaseDuration = duration;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    return Details::BlobRestClient::BlobContainer::AcquireLease(
-        options.Context, *m_pipeline, m_blobContainerUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::RenewBlobContainerLeaseResult> BlobContainerClient::RenewLease(
-      const std::string& leaseId,
-      const RenewBlobContainerLeaseOptions& options) const
-  {
-    Details::BlobRestClient::BlobContainer::RenewBlobContainerLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.LeaseId = leaseId;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    return Details::BlobRestClient::BlobContainer::RenewLease(
-        options.Context, *m_pipeline, m_blobContainerUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::ReleaseBlobContainerLeaseResult> BlobContainerClient::ReleaseLease(
-      const std::string& leaseId,
-      const ReleaseBlobContainerLeaseOptions& options) const
-  {
-    Details::BlobRestClient::BlobContainer::ReleaseBlobContainerLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.LeaseId = leaseId;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    return Details::BlobRestClient::BlobContainer::ReleaseLease(
-        options.Context, *m_pipeline, m_blobContainerUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::ChangeBlobContainerLeaseResult> BlobContainerClient::ChangeLease(
-      const std::string& leaseId,
-      const std::string& proposedLeaseId,
-      const ChangeBlobContainerLeaseOptions& options) const
-  {
-    Details::BlobRestClient::BlobContainer::ChangeBlobContainerLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.LeaseId = leaseId;
-    protocolLayerOptions.ProposedLeaseId = proposedLeaseId;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    return Details::BlobRestClient::BlobContainer::ChangeLease(
-        options.Context, *m_pipeline, m_blobContainerUrl, protocolLayerOptions);
-  }
-
-  Azure::Core::Response<Models::BreakBlobContainerLeaseResult> BlobContainerClient::BreakLease(
-      const BreakBlobContainerLeaseOptions& options) const
-  {
-    Details::BlobRestClient::BlobContainer::BreakBlobContainerLeaseOptions protocolLayerOptions;
-    protocolLayerOptions.BreakPeriod = options.BreakPeriod;
-    protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
-    protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
-    return Details::BlobRestClient::BlobContainer::BreakLease(
         options.Context, *m_pipeline, m_blobContainerUrl, protocolLayerOptions);
   }
 

@@ -1,5 +1,20 @@
 # Release History
 
+## 12.0.0-beta.7 (Unreleased)
+
+### Breaking Changes
+
+- Removed `GetDirectoryClient` and `GetFileClient` from `ShareClient`. `ShareDirectoryClient` and `ShareFileClient` now initializes with the name of the resource, not path, to indicate that no path parsing is done for the API
+- `ContentRange` in `FileDownloadResult` is now `Azure::Core::Http::Range`.
+- `ContentLength` in `FileDownloadResult` is renamed to `FileSize`.
+- Renamed `GetUri` to `GetUrl`.
+- Moved all protocol layer generated result types to `Details` namespace.
+- Renamed `ShareItems` in `ListSharesResponse` to `Items`.
+- Renamed `ShareItems` in `ServiceListSharesSinglePageResult` to `Items`.
+- Added `ShareLeaseClient`, all lease related APIs are moved to `ShareLeaseClient`.
+- Changed lease duration to be `std::chrono::seconds`.
+- Added `RequestId` in each return types for REST API calls, except for concurrent APIs.
+
 ## 12.0.0-beta.6 (2020-01-14)
 
 ### New Features

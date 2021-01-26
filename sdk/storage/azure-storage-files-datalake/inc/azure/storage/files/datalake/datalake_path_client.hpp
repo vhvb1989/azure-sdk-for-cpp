@@ -69,20 +69,12 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
         const DataLakeClientOptions& options = DataLakeClientOptions());
 
     /**
-     * @brief Gets the path's primary uri endpoint. This is the endpoint used for blob
+     * @brief Gets the path's primary url endpoint. This is the endpoint used for blob
      * storage available features in DataLake.
      *
-     * @return The path's primary uri endpoint.
+     * @return The path's primary url endpoint.
      */
-    std::string GetUri() const { return m_blobClient.GetUrl(); }
-
-    /**
-     * @brief Gets the path's primary uri endpoint. This is the endpoint used for dfs
-     * endpoint only operations
-     *
-     * @return The path's primary uri endpoint.
-     */
-    std::string GetDfsUri() const { return m_dfsUri.GetAbsoluteUrl(); }
+    std::string GetUrl() const { return m_blobClient.GetUrl(); }
 
     /**
      * @brief Creates a file or directory. By default, the destination is overwritten and
@@ -130,24 +122,37 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
         const DeleteDataLakePathOptions& options = DeleteDataLakePathOptions()) const;
 
     /**
-     * @brief Sets the owner, group, permissions, or access control list for a file or directory.
+     * @brief Sets the owner, group, and access control list for a file or directory.
      *        Note that Hierarchical Namespace must be enabled for the account in order to use
-     *        access control. Also note that the Access Control List (ACL) includes permissions for
-     *        the owner, owning group, and others, so the x-ms-permissions and x-ms-acl request
-     *        headers are mutually exclusive.
+     *        access control.
      * @param acls Sets POSIX access control rights on files and directories. Each access control
      *             entry (ACE) consists of a scope, a type, a user or group identifier, and
      *             permissions.
      * @param options Optional parameters to set an access control to the resource the path points
      *                to.
-     * @return Azure::Core::Response<Models::SetDataLakePathAccessControlResult> containing the
+     * @return Azure::Core::Response<Models::SetDataLakePathAccessControlListResult> containing the
      * information returned when setting path's access control.
      * @remark This request is sent to dfs endpoint.
      */
-    Azure::Core::Response<Models::SetDataLakePathAccessControlResult> SetAccessControl(
+    Azure::Core::Response<Models::SetDataLakePathAccessControlListResult> SetAccessControlList(
         std::vector<Models::Acl> acls,
-        const SetDataLakePathAccessControlOptions& options
-        = SetDataLakePathAccessControlOptions()) const;
+        const SetDataLakePathAccessControlListOptions& options
+        = SetDataLakePathAccessControlListOptions()) const;
+
+    /**
+     * @brief Sets the owner, group, and permissions for a file or directory.
+     *        Note that Hierarchical Namespace must be enabled for the account in order to use
+     *        access control.
+     * @param permissions Sets the permissions on the path
+     * @param options Optional parameters to set permissions to the resource the path points to.
+     * @return Azure::Core::Response<Models::SetDataLakePathPermissionsResult> containing the
+     * information returned when setting path's permissions.
+     * @remark This request is sent to dfs endpoint.
+     */
+    Azure::Core::Response<Models::SetDataLakePathPermissionsResult> SetPermissions(
+        std::string permissions,
+        const SetDataLakePathPermissionsOptions& options
+        = SetDataLakePathPermissionsOptions()) const;
 
     /**
      * @brief Sets the properties of a resource the path points to.
@@ -199,96 +204,21 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
         Storage::Metadata metadata,
         const SetDataLakePathMetadataOptions& options = SetDataLakePathMetadataOptions()) const;
 
-    /**
-     * @brief Acquires a lease on the path.
-     * @param proposedLeaseId Proposed lease ID, in a GUID string format.
-     * @param duration Specifies the duration of the lease, in seconds, or
-     * Azure::Storage::InfiniteLeaseDuration for a lease that never expires. A non-infinite lease
-     * can be between 15 and 60 seconds. A lease duration cannot be changed using renew or change.
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::AcquireDataLakePathLeaseResult> describing the lease.
-     * @remark This request is sent to blob endpoint.
-     */
-    Azure::Core::Response<Models::AcquireDataLakePathLeaseResult> AcquireLease(
-        const std::string& proposedLeaseId,
-        int32_t duration,
-        const AcquireDataLakePathLeaseOptions& options = AcquireDataLakePathLeaseOptions()) const
-    {
-      return m_blobClient.AcquireLease(proposedLeaseId, duration, options);
-    }
-
-    /**
-     * @brief Renews the path's previously-acquired lease.
-     * @param leaseId ID of the previously-acquired lease.
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::RenewDataLakePathLeaseResult> describing the lease.
-     * @remark This request is sent to blob endpoint.
-     */
-    Azure::Core::Response<Models::RenewDataLakePathLeaseResult> RenewLease(
-        const std::string& leaseId,
-        const RenewDataLakePathLeaseOptions& options = RenewDataLakePathLeaseOptions()) const
-    {
-      return m_blobClient.RenewLease(leaseId, options);
-    }
-
-    /**
-     * @brief Releases the path's previously-acquired lease.
-     * @param leaseId ID of the previously-acquired lease.
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::ReleaseDataLakePathLeaseResult> describing the updated
-     * path.
-     * @remark This request is sent to blob endpoint.
-     */
-    Azure::Core::Response<Models::ReleaseDataLakePathLeaseResult> ReleaseLease(
-        const std::string& leaseId,
-        const ReleaseDataLakePathLeaseOptions& options = ReleaseDataLakePathLeaseOptions()) const
-    {
-      return m_blobClient.ReleaseLease(leaseId, options);
-    }
-
-    /**
-     * @brief Changes the lease of an active lease.
-     * @param leaseId ID of the previously-acquired lease.
-     * @param proposedLeaseId Proposed lease ID, in a GUID string format.
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::ChangeDataLakePathLeaseResult> describing the lease.
-     * @remark This request is sent to blob endpoint.
-     */
-    Azure::Core::Response<Models::ChangeDataLakePathLeaseResult> ChangeLease(
-        const std::string& leaseId,
-        const std::string& proposedLeaseId,
-        const ChangeDataLakePathLeaseOptions& options = ChangeDataLakePathLeaseOptions()) const
-    {
-      return m_blobClient.ChangeLease(leaseId, proposedLeaseId, options);
-    }
-
-    /**
-     * @brief Breaks the previously-acquired lease.
-     * @param options Optional parameters to execute this function.
-     * @return Azure::Core::Response<Models::BreakDataLakePathLeaseResult> describing the broken
-     * lease.
-     * @remark This request is sent to blob endpoint.
-     */
-    Azure::Core::Response<Models::BreakDataLakePathLeaseResult> BreakLease(
-        const BreakDataLakePathLeaseOptions& options = BreakDataLakePathLeaseOptions()) const
-    {
-      return m_blobClient.BreakLease(options);
-    }
-
   protected:
-    Azure::Core::Http::Url m_dfsUri;
+    Azure::Core::Http::Url m_dfsUrl;
     Blobs::BlobClient m_blobClient;
     std::shared_ptr<Azure::Core::Http::HttpPipeline> m_pipeline;
 
     explicit DataLakePathClient(
-        Azure::Core::Http::Url dfsUri,
+        Azure::Core::Http::Url dfsUrl,
         Blobs::BlobClient blobClient,
         std::shared_ptr<Azure::Core::Http::HttpPipeline> pipeline)
-        : m_dfsUri(std::move(dfsUri)), m_blobClient(std::move(blobClient)),
+        : m_dfsUrl(std::move(dfsUrl)), m_blobClient(std::move(blobClient)),
           m_pipeline(std::move(pipeline))
     {
     }
 
     friend class DataLakeFileSystemClient;
+    friend class DataLakeLeaseClient;
   };
 }}}} // namespace Azure::Storage::Files::DataLake

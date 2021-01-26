@@ -27,7 +27,7 @@ namespace Azure { namespace Storage { namespace Test {
             StandardStorageConnectionString(), m_shareName));
     m_shareClient->Create();
     m_fileShareDirectoryClient = std::make_shared<Files::Shares::ShareDirectoryClient>(
-        m_shareClient->GetDirectoryClient(m_directoryName));
+        m_shareClient->GetRootDirectoryClient().GetSubdirectoryClient(m_directoryName));
     m_fileShareDirectoryClient->Create();
     m_fileClient = std::make_shared<Files::Shares::ShareFileClient>(
         m_fileShareDirectoryClient->GetFileClient(m_fileName));
@@ -250,12 +250,13 @@ namespace Azure { namespace Storage { namespace Test {
   {
     std::string leaseId1 = CreateUniqueLeaseId();
     auto lastModified = m_fileClient->GetProperties()->LastModified;
-    auto aLease = *m_fileClient->AcquireLease(leaseId1);
+    auto leaseClient = Files::Shares::ShareLeaseClient(*m_fileClient, leaseId1);
+    auto aLease = *leaseClient.Acquire(Files::Shares::ShareLeaseClient::InfiniteLeaseDuration);
     EXPECT_FALSE(aLease.ETag.empty());
     EXPECT_TRUE(aLease.LastModified >= lastModified);
     EXPECT_EQ(aLease.LeaseId, leaseId1);
     lastModified = m_fileClient->GetProperties()->LastModified;
-    aLease = *m_fileClient->AcquireLease(leaseId1);
+    aLease = *leaseClient.Acquire(Files::Shares::ShareLeaseClient::InfiniteLeaseDuration);
     EXPECT_FALSE(aLease.ETag.empty());
     EXPECT_TRUE(aLease.LastModified >= lastModified);
     EXPECT_EQ(aLease.LeaseId, leaseId1);
@@ -267,28 +268,22 @@ namespace Azure { namespace Storage { namespace Test {
     std::string leaseId2 = CreateUniqueLeaseId();
     EXPECT_NE(leaseId1, leaseId2);
     lastModified = m_fileClient->GetProperties()->LastModified;
-    auto cLease = *m_fileClient->ChangeLease(leaseId1, leaseId2);
+    auto cLease = *leaseClient.Change(leaseId2);
     EXPECT_FALSE(cLease.ETag.empty());
     EXPECT_TRUE(cLease.LastModified >= lastModified);
     EXPECT_EQ(cLease.LeaseId, leaseId2);
 
     lastModified = m_fileClient->GetProperties()->LastModified;
-    auto fileInfo = *m_fileClient->ReleaseLease(leaseId2);
+    auto fileInfo = *leaseClient.Release();
     EXPECT_FALSE(fileInfo.ETag.empty());
     EXPECT_TRUE(fileInfo.LastModified >= lastModified);
 
-    aLease = *m_fileClient->AcquireLease(CreateUniqueLeaseId());
+    leaseClient = Files::Shares::ShareLeaseClient(*m_fileClient, CreateUniqueLeaseId());
+    aLease = *leaseClient.Acquire(Files::Shares::ShareLeaseClient::InfiniteLeaseDuration);
     lastModified = m_fileClient->GetProperties()->LastModified;
-    auto brokenLease = *m_fileClient->BreakLease();
+    auto brokenLease = *leaseClient.Break();
     EXPECT_FALSE(brokenLease.ETag.empty());
     EXPECT_TRUE(brokenLease.LastModified >= lastModified);
-
-    aLease = *m_fileClient->AcquireLease(CreateUniqueLeaseId());
-    lastModified = m_fileClient->GetProperties()->LastModified;
-    brokenLease = *m_fileClient->BreakLease();
-    EXPECT_FALSE(brokenLease.ETag.empty());
-    EXPECT_TRUE(brokenLease.LastModified >= lastModified);
-    m_fileClient->BreakLease();
   }
 
   TEST_F(FileShareFileClientTest, ConcurrentUpload)
@@ -580,7 +575,8 @@ namespace Azure { namespace Storage { namespace Test {
     auto memBodyStream = Core::Http::MemoryBodyStream(rangeContent);
     {
       // Simple upload/download.
-      auto fileClient = m_shareClient->GetFileClient(LowercaseRandomString(10));
+      auto fileClient
+          = m_shareClient->GetRootDirectoryClient().GetFileClient(LowercaseRandomString(10));
       fileClient.Create(static_cast<int64_t>(numOfChunks) * rangeSize);
       for (int32_t i = 0; i < numOfChunks; ++i)
       {
@@ -591,15 +587,20 @@ namespace Azure { namespace Storage { namespace Test {
 
       for (int32_t i = 0; i < numOfChunks; ++i)
       {
-        std::vector<uint8_t> resultBuffer;
         Files::Shares::DownloadShareFileOptions downloadOptions;
         downloadOptions.Range = Core::Http::Range();
         downloadOptions.Range.GetValue().Offset = static_cast<int64_t>(rangeSize) * i;
         downloadOptions.Range.GetValue().Length = rangeSize;
-        EXPECT_NO_THROW(
-            resultBuffer = Core::Http::BodyStream::ReadToEnd(
-                Core::Context(), *fileClient.Download(downloadOptions)->BodyStream));
+        Files::Shares::Models::DownloadShareFileResult result;
+        EXPECT_NO_THROW(result = fileClient.Download(downloadOptions).ExtractValue());
+        auto resultBuffer
+            = Core::Http::BodyStream::ReadToEnd(Core::Context(), *(result.BodyStream));
         EXPECT_EQ(rangeContent, resultBuffer);
+        EXPECT_EQ(
+            downloadOptions.Range.GetValue().Length.GetValue(),
+            result.ContentRange.Length.GetValue());
+        EXPECT_EQ(downloadOptions.Range.GetValue().Offset, result.ContentRange.Offset);
+        EXPECT_EQ(static_cast<int64_t>(numOfChunks) * rangeSize, result.FileSize);
       }
     }
 
@@ -608,7 +609,8 @@ namespace Azure { namespace Storage { namespace Test {
       memBodyStream.Rewind();
       auto md5 = Md5::Hash(rangeContent.data(), rangeContent.size());
       auto invalidMd5 = Md5::Hash(std::string("This is garbage."));
-      auto fileClient = m_shareClient->GetFileClient(LowercaseRandomString(10));
+      auto fileClient
+          = m_shareClient->GetRootDirectoryClient().GetFileClient(LowercaseRandomString(10));
       Files::Shares::UploadShareFileRangeOptions uploadOptions;
       fileClient.Create(static_cast<int64_t>(numOfChunks) * rangeSize);
       ContentHash hash;
@@ -630,25 +632,29 @@ namespace Azure { namespace Storage { namespace Test {
     auto memBodyStream = Core::Http::MemoryBodyStream(fileContent);
     {
       // Simple copy works.
-      auto fileClient = m_shareClient->GetFileClient(LowercaseRandomString(10));
+      auto fileClient
+          = m_shareClient->GetRootDirectoryClient().GetFileClient(LowercaseRandomString(10));
       fileClient.Create(fileSize);
 
-      auto destFileClient = m_shareClient->GetFileClient(LowercaseRandomString(10));
+      auto destFileClient
+          = m_shareClient->GetRootDirectoryClient().GetFileClient(LowercaseRandomString(10));
       Files::Shares::Models::StartCopyShareFileResult result;
-      EXPECT_NO_THROW(result = destFileClient.StartCopy(fileClient.GetUri()).ExtractValue());
+      EXPECT_NO_THROW(result = destFileClient.StartCopy(fileClient.GetUrl()).ExtractValue());
       EXPECT_EQ(Files::Shares::Models::CopyStatusType::Success, result.CopyStatus);
       EXPECT_FALSE(result.CopyId.empty());
     }
 
     {
       // Copy mode with override and empty permission throws error..
-      auto fileClient = m_shareClient->GetFileClient(LowercaseRandomString(10));
+      auto fileClient
+          = m_shareClient->GetRootDirectoryClient().GetFileClient(LowercaseRandomString(10));
       fileClient.Create(fileSize);
 
-      auto destFileClient = m_shareClient->GetFileClient(LowercaseRandomString(10));
+      auto destFileClient
+          = m_shareClient->GetRootDirectoryClient().GetFileClient(LowercaseRandomString(10));
       Files::Shares::StartCopyShareFileOptions copyOptions;
       copyOptions.PermissionCopyMode = Files::Shares::Models::PermissionCopyModeType::Override;
-      EXPECT_THROW(destFileClient.StartCopy(fileClient.GetUri(), copyOptions), std::runtime_error);
+      EXPECT_THROW(destFileClient.StartCopy(fileClient.GetUrl(), copyOptions), std::runtime_error);
     }
   }
 
@@ -660,7 +666,8 @@ namespace Azure { namespace Storage { namespace Test {
     auto halfContent
         = std::vector<uint8_t>(fileContent.begin(), fileContent.begin() + fileSize / 2);
     halfContent.resize(fileSize);
-    auto fileClient = m_shareClient->GetFileClient(LowercaseRandomString(10));
+    auto fileClient
+        = m_shareClient->GetRootDirectoryClient().GetFileClient(LowercaseRandomString(10));
     fileClient.Create(fileSize);
     EXPECT_NO_THROW(fileClient.UploadRange(0, &memBodyStream));
     EXPECT_NO_THROW(fileClient.ClearRange(fileSize / 2, fileSize / 2));
@@ -689,7 +696,8 @@ namespace Azure { namespace Storage { namespace Test {
     auto halfContent
         = std::vector<uint8_t>(fileContent.begin(), fileContent.begin() + fileSize / 2);
     halfContent.resize(fileSize);
-    auto fileClient = m_shareClient->GetFileClient(LowercaseRandomString(10));
+    auto fileClient
+        = m_shareClient->GetRootDirectoryClient().GetFileClient(LowercaseRandomString(10));
     fileClient.Create(fileSize);
     EXPECT_NO_THROW(fileClient.UploadRange(0, &memBodyStream));
     EXPECT_NO_THROW(fileClient.ClearRange(fileSize / 2, fileSize / 2));
@@ -737,6 +745,48 @@ namespace Azure { namespace Storage { namespace Test {
     EXPECT_EQ(3584, result.ClearRanges[1].Offset);
     EXPECT_TRUE(result.ClearRanges[1].Length.HasValue());
     EXPECT_EQ(1536, result.ClearRanges[1].Length.GetValue());
+  }
+
+  TEST_F(FileShareFileClientTest, StorageExceptionAdditionalInfo)
+  {
+    Azure::Storage::Files::Shares::ShareClientOptions options;
+    class InvalidQueryParameterPolicy : public Azure::Core::Http::HttpPolicy {
+    public:
+      ~InvalidQueryParameterPolicy() override {}
+
+      std::unique_ptr<HttpPolicy> Clone() const override
+      {
+        return std::make_unique<InvalidQueryParameterPolicy>(*this);
+      }
+
+      std::unique_ptr<Core::Http::RawResponse> Send(
+          Core::Context const& ctx,
+          Core::Http::Request& request,
+          Core::Http::NextHttpPolicy nextHttpPolicy) const override
+      {
+        request.GetUrl().AppendQueryParameter("comp", "lease1");
+        return nextHttpPolicy.Send(ctx, request);
+      }
+    };
+    options.PerOperationPolicies.emplace_back(std::make_unique<InvalidQueryParameterPolicy>());
+    auto fileClient = Azure::Storage::Files::Shares::ShareFileClient::CreateFromConnectionString(
+        StandardStorageConnectionString(), m_shareName, RandomString(), options);
+    try
+    {
+      fileClient.Create(1024);
+    }
+    catch (StorageException& e)
+    {
+      EXPECT_NE(e.StatusCode, Azure::Core::Http::HttpStatusCode::None);
+      EXPECT_FALSE(e.ReasonPhrase.empty());
+      EXPECT_FALSE(e.ClientRequestId.empty());
+      EXPECT_FALSE(e.RequestId.empty());
+      EXPECT_FALSE(e.ErrorCode.empty());
+      EXPECT_FALSE(e.Message.empty());
+      EXPECT_FALSE(e.AdditionalInformation.empty());
+      return;
+    }
+    FAIL();
   }
 
 }}} // namespace Azure::Storage::Test

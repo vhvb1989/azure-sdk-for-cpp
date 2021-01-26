@@ -33,12 +33,14 @@ set(
     inc/azure/storage/files/datalake/datalake_directory_client.hpp
     inc/azure/storage/files/datalake/datalake_file_client.hpp
     inc/azure/storage/files/datalake/datalake_file_system_client.hpp
+    inc/azure/storage/files/datalake/datalake_lease_client.hpp
     inc/azure/storage/files/datalake/datalake_options.hpp
     inc/azure/storage/files/datalake/datalake_path_client.hpp
     inc/azure/storage/files/datalake/datalake_responses.hpp
     inc/azure/storage/files/datalake/datalake_sas_builder.hpp
     inc/azure/storage/files/datalake/datalake_service_client.hpp
     inc/azure/storage/files/datalake/datalake_utilities.hpp
+    inc/azure/storage/files/datalake/dll_import_export.hpp
     inc/azure/storage/files/datalake/version.hpp
     inc/azure/storage/files/datalake.hpp
 )
@@ -48,6 +50,7 @@ set(
     src/datalake_directory_client.cpp
     src/datalake_file_client.cpp
     src/datalake_file_system_client.cpp
+    src/datalake_lease_client.cpp
     src/datalake_path_client.cpp
     src/datalake_responses.cpp
     src/datalake_rest_client.cpp
@@ -73,7 +76,11 @@ target_link_libraries(azure-storage-files-datalake PUBLIC Azure::azure-storage-b
 get_az_version("${CMAKE_CURRENT_SOURCE_DIR}/inc/azure/storage/files/datalake/version.hpp")
 generate_documentation(azure-storage-files-datalake ${AZ_LIBRARY_VERSION})
 
-az_vcpkg_export(azure-storage-files-datalake)
+az_vcpkg_export(
+    azure-storage-files-datalake
+    STORAGE_FILES_DATALAKE
+    "azure/storage/files/datalake/dll_import_export.hpp"
+  )
 
 # coverage. Has no effect if BUILD_CODE_COVERAGE is OFF
 create_code_coverage(storage azure-storage-files-datalake azure-storage-test)

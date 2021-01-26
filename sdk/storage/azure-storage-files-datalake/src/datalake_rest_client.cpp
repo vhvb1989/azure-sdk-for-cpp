@@ -16,7 +16,9 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake { nam
   const PathExpiryOptions PathExpiryOptions::RelativeToNow("RelativeToNow");
   const PathExpiryOptions PathExpiryOptions::Absolute("Absolute");
 
-  const AccountResourceType AccountResourceType::Account("account");
+  const PublicAccessType PublicAccessType::FileSystem("FileSystem");
+  const PublicAccessType PublicAccessType::Path("Path");
+  const PublicAccessType PublicAccessType::None("None");
 
   const PathResourceType PathResourceType::Directory("directory");
   const PathResourceType PathResourceType::File("file");
@@ -24,14 +26,11 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake { nam
   const PathRenameMode PathRenameMode::Legacy("legacy");
   const PathRenameMode PathRenameMode::Posix("posix");
 
-  const PathLeaseAction PathLeaseAction::Acquire("acquire");
-  const PathLeaseAction PathLeaseAction::Break("break");
-  const PathLeaseAction PathLeaseAction::Change("change");
-  const PathLeaseAction PathLeaseAction::Renew("renew");
-  const PathLeaseAction PathLeaseAction::Release("release");
-
   const PathGetPropertiesAction PathGetPropertiesAction::GetAccessControl("getAccessControl");
   const PathGetPropertiesAction PathGetPropertiesAction::GetStatus("getStatus");
+
+  const LeaseDurationType LeaseDurationType::Infinite("infinite");
+  const LeaseDurationType LeaseDurationType::Fixed("fixed");
 
   const LeaseStateType LeaseStateType::Available("available");
   const LeaseStateType LeaseStateType::Leased("leased");

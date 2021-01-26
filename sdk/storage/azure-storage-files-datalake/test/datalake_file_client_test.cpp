@@ -331,7 +331,7 @@ namespace Azure { namespace Storage { namespace Test {
     auto properties1 = m_fileClient->GetProperties();
 
     // Append
-    m_fileClient->AppendData(bufferStream.get(), 0);
+    m_fileClient->Append(bufferStream.get(), 0);
     auto properties2 = m_fileClient->GetProperties();
     // Append does not change etag because not committed yet.
     EXPECT_EQ(properties1->ETag, properties2->ETag);
@@ -339,7 +339,7 @@ namespace Azure { namespace Storage { namespace Test {
     EXPECT_EQ(properties1->LastModified, properties2->LastModified);
 
     // Flush
-    m_fileClient->FlushData(bufferSize);
+    m_fileClient->Flush(bufferSize);
     auto properties3 = m_fileClient->GetProperties();
     EXPECT_NE(properties2->ETag, properties3->ETag);
 
@@ -362,7 +362,7 @@ namespace Azure { namespace Storage { namespace Test {
     auto properties1 = newFileClient->GetProperties();
 
     // Append
-    newFileClient->AppendData(bufferStream.get(), 0);
+    newFileClient->Append(bufferStream.get(), 0);
     auto properties2 = newFileClient->GetProperties();
     // Append does not change etag because not committed yet.
     EXPECT_EQ(properties1->ETag, properties2->ETag);
@@ -370,7 +370,7 @@ namespace Azure { namespace Storage { namespace Test {
     EXPECT_EQ(properties1->LastModified, properties2->LastModified);
 
     // Flush
-    newFileClient->FlushData(bufferSize);
+    newFileClient->Flush(bufferSize);
     auto properties3 = newFileClient->GetProperties();
     EXPECT_NE(properties2->ETag, properties3->ETag);
 
@@ -378,6 +378,9 @@ namespace Azure { namespace Storage { namespace Test {
     auto result = newFileClient->Read();
     auto downloaded = ReadBodyStream(result->Body);
     EXPECT_EQ(buffer, downloaded);
+    EXPECT_EQ(bufferSize, result->FileSize);
+    EXPECT_EQ(bufferSize, result->ContentRange.Length.GetValue());
+    EXPECT_EQ(0, result->ContentRange.Offset);
 
     // Read Range
     {
@@ -390,6 +393,9 @@ namespace Azure { namespace Storage { namespace Test {
       downloaded = ReadBodyStream(result->Body);
       EXPECT_EQ(firstHalf.size(), downloaded.size());
       EXPECT_EQ(firstHalf, downloaded);
+      EXPECT_EQ(bufferSize, result->FileSize);
+      EXPECT_EQ(bufferSize / 2, result->ContentRange.Length.GetValue());
+      EXPECT_EQ(0, result->ContentRange.Offset);
     }
     {
       auto secondHalf = std::vector<uint8_t>(buffer.begin() + bufferSize / 2, buffer.end());
@@ -400,6 +406,9 @@ namespace Azure { namespace Storage { namespace Test {
       result = newFileClient->Read(options);
       downloaded = ReadBodyStream(result->Body);
       EXPECT_EQ(secondHalf, downloaded);
+      EXPECT_EQ(bufferSize, result->FileSize);
+      EXPECT_EQ(bufferSize / 2, result->ContentRange.Length.GetValue());
+      EXPECT_EQ(bufferSize / 2, result->ContentRange.Offset);
     }
     {
       // Read with last modified access condition.
@@ -491,7 +500,7 @@ namespace Azure { namespace Storage { namespace Test {
       EXPECT_TRUE(IsValidTime(res->LastModified));
       EXPECT_EQ(res->LastModified, lastModified);
       auto properties = *fileClient.GetProperties();
-      EXPECT_EQ(properties.ContentLength, fileSize);
+      EXPECT_EQ(properties.FileSize, fileSize);
       EXPECT_EQ(properties.HttpHeaders, options.HttpHeaders);
       EXPECT_EQ(properties.Metadata, options.Metadata);
       EXPECT_EQ(properties.ETag, res->ETag);
@@ -525,7 +534,7 @@ namespace Azure { namespace Storage { namespace Test {
       EXPECT_TRUE(IsValidTime(res->LastModified));
       EXPECT_EQ(res->LastModified, lastModified);
       auto properties = *fileClient.GetProperties();
-      EXPECT_EQ(properties.ContentLength, fileSize);
+      EXPECT_EQ(properties.FileSize, fileSize);
       EXPECT_EQ(properties.HttpHeaders, options.HttpHeaders);
       EXPECT_EQ(properties.Metadata, options.Metadata);
       EXPECT_EQ(properties.ETag, res->ETag);
@@ -582,7 +591,7 @@ namespace Azure { namespace Storage { namespace Test {
       auto clientSecretClient = Azure::Storage::Files::DataLake::DataLakeFileClient(
           Azure::Storage::Files::DataLake::DataLakeFileClient::CreateFromConnectionString(
               AdlsGen2ConnectionString(), m_fileSystemName, RandomString(10))
-              .GetUri(),
+              .GetUrl(),
           credential);
 
       EXPECT_NO_THROW(clientSecretClient.Create());
@@ -608,7 +617,7 @@ namespace Azure { namespace Storage { namespace Test {
       auto anonymousClient = Azure::Storage::Files::DataLake::DataLakeFileClient(
           Azure::Storage::Files::DataLake::DataLakeFileClient::CreateFromConnectionString(
               AdlsGen2ConnectionString(), m_fileSystemName, objectName)
-              .GetUri());
+              .GetUrl());
 
       std::this_thread::sleep_for(std::chrono::seconds(30));
 

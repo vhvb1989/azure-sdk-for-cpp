@@ -66,16 +66,16 @@ void DataLakeGettingStarted()
     // One way of passing in the buffer, note that the buffer is not copied.
     auto bufferStream = Azure::Core::Http::MemoryBodyStream(buffer);
 
-    fileClient.AppendData(&bufferStream, 0 /* Offset of the position to be appended.*/);
+    fileClient.Append(&bufferStream, 0 /* Offset of the position to be appended.*/);
 
     // Another way of passing in the buffer, note that buffer is also not copied.
     bufferStream = Azure::Core::Http::MemoryBodyStream(
         reinterpret_cast<const uint8_t*>(str2.data()), str2.size());
 
-    fileClient.AppendData(&bufferStream, str1.size());
+    fileClient.Append(&bufferStream, str1.size());
 
     // Flush
-    fileClient.FlushData(str1.size() + str2.size());
+    fileClient.Flush(str1.size() + str2.size());
 
     // Read
     auto result = fileClient.Read();
@@ -88,7 +88,7 @@ void DataLakeGettingStarted()
 
     // List all file systems.
     std::string continuation;
-    std::vector<Models::FileSystem> fileSystems;
+    std::vector<Models::FileSystemItem> fileSystems;
     do
     {
       auto response = serviceClient.ListFileSystemsSinglePage();
@@ -96,8 +96,7 @@ void DataLakeGettingStarted()
       {
         continuation = response->ContinuationToken.GetValue();
       }
-      fileSystems.insert(
-          fileSystems.end(), response->Filesystems.begin(), response->Filesystems.end());
+      fileSystems.insert(fileSystems.end(), response->Items.begin(), response->Items.end());
     } while (!continuation.empty());
 
     // Delete file system.

@@ -87,13 +87,13 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
   DataLakeFileClient DataLakeFileClient::CreateFromConnectionString(
       const std::string& connectionString,
       const std::string& fileSystemName,
-      const std::string& filePath,
+      const std::string& fileName,
       const DataLakeClientOptions& options)
   {
     auto parsedConnectionString = Azure::Storage::Details::ParseConnectionString(connectionString);
     auto fileUri = std::move(parsedConnectionString.DataLakeServiceUrl);
     fileUri.AppendPath(Storage::Details::UrlEncodePath(fileSystemName));
-    fileUri.AppendPath(Storage::Details::UrlEncodePath(filePath));
+    fileUri.AppendPath(Storage::Details::UrlEncodePath(fileName));
 
     if (parsedConnectionString.KeyCredential)
     {
@@ -123,7 +123,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     }
     StorageRetryWithSecondaryOptions dfsRetryOptions = options.RetryOptions;
     dfsRetryOptions.SecondaryHostForRetryReads
-        = Details::GetDfsUriFromUri(options.RetryOptions.SecondaryHostForRetryReads);
+        = Details::GetDfsUrlFromUrl(options.RetryOptions.SecondaryHostForRetryReads);
     policies.emplace_back(std::make_unique<Storage::Details::StorageRetryPolicy>(dfsRetryOptions));
     for (const auto& p : options.PerRetryPolicies)
     {
@@ -154,7 +154,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     }
     StorageRetryWithSecondaryOptions dfsRetryOptions = options.RetryOptions;
     dfsRetryOptions.SecondaryHostForRetryReads
-        = Details::GetDfsUriFromUri(options.RetryOptions.SecondaryHostForRetryReads);
+        = Details::GetDfsUrlFromUrl(options.RetryOptions.SecondaryHostForRetryReads);
     policies.emplace_back(std::make_unique<Storage::Details::StorageRetryPolicy>(dfsRetryOptions));
     for (const auto& p : options.PerRetryPolicies)
     {
@@ -184,7 +184,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     }
     StorageRetryWithSecondaryOptions dfsRetryOptions = options.RetryOptions;
     dfsRetryOptions.SecondaryHostForRetryReads
-        = Details::GetDfsUriFromUri(options.RetryOptions.SecondaryHostForRetryReads);
+        = Details::GetDfsUrlFromUrl(options.RetryOptions.SecondaryHostForRetryReads);
     policies.emplace_back(std::make_unique<Storage::Details::StorageRetryPolicy>(dfsRetryOptions));
     for (const auto& p : options.PerRetryPolicies)
     {
@@ -197,10 +197,10 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     m_pipeline = std::make_shared<Azure::Core::Http::HttpPipeline>(policies);
   }
 
-  Azure::Core::Response<Models::AppendDataLakeFileDataResult> DataLakeFileClient::AppendData(
+  Azure::Core::Response<Models::AppendDataLakeFileResult> DataLakeFileClient::Append(
       Azure::Core::Http::BodyStream* content,
       int64_t offset,
-      const AppendDataLakeFileDataOptions& options) const
+      const AppendDataLakeFileOptions& options) const
   {
     Details::DataLakeRestClient::Path::AppendDataOptions protocolLayerOptions;
     protocolLayerOptions.Position = offset;
@@ -218,15 +218,15 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     }
     protocolLayerOptions.LeaseIdOptional = options.AccessConditions.LeaseId;
     return Details::DataLakeRestClient::Path::AppendData(
-        m_dfsUri, *content, *m_pipeline, options.Context, protocolLayerOptions);
+        m_dfsUrl, *content, *m_pipeline, options.Context, protocolLayerOptions);
   }
 
-  Azure::Core::Response<Models::FlushDataLakeFileDataResult> DataLakeFileClient::FlushData(
-      int64_t endingOffset,
-      const FlushDataLakeFileDataOptions& options) const
+  Azure::Core::Response<Models::FlushDataLakeFileResult> DataLakeFileClient::Flush(
+      int64_t position,
+      const FlushDataLakeFileOptions& options) const
   {
     Details::DataLakeRestClient::Path::FlushDataOptions protocolLayerOptions;
-    protocolLayerOptions.Position = endingOffset;
+    protocolLayerOptions.Position = position;
     protocolLayerOptions.RetainUncommittedData = options.RetainUncommittedData;
     protocolLayerOptions.Close = options.Close;
     protocolLayerOptions.ContentLength = 0;
@@ -247,7 +247,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     protocolLayerOptions.IfModifiedSince = options.AccessConditions.IfModifiedSince;
     protocolLayerOptions.IfUnmodifiedSince = options.AccessConditions.IfUnmodifiedSince;
     return Details::DataLakeRestClient::Path::FlushData(
-        m_dfsUri, *m_pipeline, options.Context, protocolLayerOptions);
+        m_dfsUrl, *m_pipeline, options.Context, protocolLayerOptions);
   }
 
   Azure::Core::Response<Models::RenameDataLakeFileResult> DataLakeFileClient::Rename(
@@ -257,11 +257,11 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     Azure::Core::Nullable<std::string> destinationFileSystem = options.DestinationFileSystem;
     if (!destinationFileSystem.HasValue() || destinationFileSystem.GetValue().empty())
     {
-      const auto& currentPath = m_dfsUri.GetPath();
+      const auto& currentPath = m_dfsUrl.GetPath();
       std::string::const_iterator cur = currentPath.begin();
       destinationFileSystem = Details::GetSubstringTillDelimiter('/', currentPath, cur);
     }
-    auto destinationDfsUri = m_dfsUri;
+    auto destinationDfsUri = m_dfsUrl;
     destinationDfsUri.SetPath(destinationFileSystem.GetValue() + '/' + destinationPath);
 
     Details::DataLakeRestClient::Path::CreateOptions protocolLayerOptions;
@@ -276,11 +276,12 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     protocolLayerOptions.SourceIfNoneMatch = options.SourceAccessConditions.IfNoneMatch;
     protocolLayerOptions.SourceIfModifiedSince = options.SourceAccessConditions.IfModifiedSince;
     protocolLayerOptions.SourceIfUnmodifiedSince = options.SourceAccessConditions.IfUnmodifiedSince;
-    protocolLayerOptions.RenameSource = "/" + m_dfsUri.GetPath();
+    protocolLayerOptions.RenameSource = "/" + m_dfsUrl.GetPath();
     auto result = Details::DataLakeRestClient::Path::Create(
         destinationDfsUri, *m_pipeline, options.Context, protocolLayerOptions);
     // At this point, there is not more exception thrown, meaning the rename is successful.
     Models::RenameDataLakeFileResult ret;
+    ret.RequestId = std::move(result->RequestId);
     return Azure::Core::Response<Models::RenameDataLakeFileResult>(
         std::move(ret), result.ExtractRawResponse());
   }
@@ -294,6 +295,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     auto result = DataLakePathClient::Delete(deleteOptions);
     Models::DeleteDataLakeFileResult ret;
     ret.Deleted = true;
+    ret.RequestId = std::move(result->RequestId);
     return Azure::Core::Response<Models::DeleteDataLakeFileResult>(
         std::move(ret), result.ExtractRawResponse());
   }
@@ -307,6 +309,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     auto result = DataLakePathClient::DeleteIfExists(deleteOptions);
     Models::DeleteDataLakeFileResult ret;
     ret.Deleted = result->Deleted;
+    ret.RequestId = std::move(result->RequestId);
     return Azure::Core::Response<Models::DeleteDataLakeFileResult>(
         std::move(ret), result.ExtractRawResponse());
   }
@@ -326,16 +329,15 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     Models::ReadDataLakeFileResult ret;
     ret.Body = std::move(result->BodyStream);
     ret.HttpHeaders = FromBlobHttpHeaders(std::move(result->HttpHeaders));
-    // FIXME
-    if (result.GetRawResponse().GetHeaders().find("content-range")
-        != result.GetRawResponse().GetHeaders().end())
-    {
-      ret.ContentRange = result.GetRawResponse().GetHeaders().at("content-range");
-    }
+    ret.ContentRange = std::move(result->ContentRange);
+    ret.FileSize = result->BlobSize;
     ret.TransactionalContentHash = std::move(result->TransactionalContentHash);
     ret.ETag = std::move(result->ETag);
     ret.LastModified = std::move(result->LastModified);
-    ret.LeaseDuration = std::move(result->LeaseDuration);
+    if (result->LeaseDuration.HasValue())
+    {
+      ret.LeaseDuration = Models::LeaseDurationType(result->LeaseDuration.GetValue().Get());
+    }
     ret.LeaseState = result->LeaseState.HasValue()
         ? FromBlobLeaseState(result->LeaseState.GetValue())
         : ret.LeaseState;
@@ -346,6 +348,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
     ret.CreatedOn = std::move(result->CreatedOn);
     ret.ExpiresOn = std::move(result->ExpiriesOn);
     ret.LastAccessedOn = std::move(result->LastAccessedOn);
+    ret.RequestId = std::move(result->RequestId);
     return Azure::Core::Response<Models::ReadDataLakeFileResult>(
         std::move(ret), result.ExtractRawResponse());
   }

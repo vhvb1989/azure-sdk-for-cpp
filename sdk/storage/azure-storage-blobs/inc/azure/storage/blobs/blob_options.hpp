@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -202,6 +203,12 @@ namespace Azure { namespace Storage { namespace Blobs {
      * @brief Context for cancelling long running operations.
      */
     Azure::Core::Context Context;
+
+    /**
+     * @brief Start time for the key's validity. The time should be specified in UTC, and
+     * will be truncated to second.
+     */
+    Azure::Core::DateTime startsOn = std::chrono::system_clock::now();
   };
 
   /**
@@ -286,7 +293,7 @@ namespace Azure { namespace Storage { namespace Blobs {
      * @brief Specifies whether data in the container may be accessed publicly and the level
      * of access.
      */
-    Azure::Core::Nullable<Models::PublicAccessType> AccessType;
+    Models::PublicAccessType AccessType = Models::PublicAccessType::None;
 
     /**
      * @brief Name-value pairs to associate with the container as metadata.
@@ -438,7 +445,7 @@ namespace Azure { namespace Storage { namespace Blobs {
      * @brief Specifies whether data in the container may be accessed publicly and the level
      * of access.
      */
-    Azure::Core::Nullable<Models::PublicAccessType> AccessType;
+    Models::PublicAccessType AccessType = Models::PublicAccessType::None;
 
     /**
      * @brief Stored access policies that you can use to provide fine grained control over
@@ -450,95 +457,6 @@ namespace Azure { namespace Storage { namespace Blobs {
      * @brief Optional conditions that must be met to perform this operation.
      */
     BlobContainerAccessConditions AccessConditions;
-  };
-
-  /**
-   * @brief Optional parameters for BlobContainerClient::AcquireLease.
-   */
-  struct AcquireBlobContainerLeaseOptions
-  {
-    /**
-     * @brief Context for cancelling long running operations.
-     */
-    Azure::Core::Context Context;
-
-    /**
-     * @brief Optional conditions that must be met to perform this operation.
-     */
-    ModifiedTimeConditions AccessConditions;
-  };
-
-  /**
-   * @brief Optional parameters for BlobContainerClient::RenewLease.
-   */
-  struct RenewBlobContainerLeaseOptions
-  {
-    /**
-     * @brief Context for cancelling long running operations.
-     */
-    Azure::Core::Context Context;
-
-    /**
-     * @brief Optional conditions that must be met to perform this operation.
-     */
-    ModifiedTimeConditions AccessConditions;
-  };
-
-  /**
-   * @brief Optional parameters for BlobContainerClient::ChangeLease.
-   */
-  struct ChangeBlobContainerLeaseOptions
-  {
-    /**
-     * @brief Context for cancelling long running operations.
-     */
-    Azure::Core::Context Context;
-
-    /**
-     * @brief Optional conditions that must be met to perform this operation.
-     */
-    ModifiedTimeConditions AccessConditions;
-  };
-
-  /**
-   * @brief Optional parameters for BlobContainerClient::ReleaseLease.
-   */
-  struct ReleaseBlobContainerLeaseOptions
-  {
-    /**
-     * @brief Context for cancelling long running operations.
-     */
-    Azure::Core::Context Context;
-
-    /**
-     * @brief Optional conditions that must be met to perform this operation.
-     */
-    ModifiedTimeConditions AccessConditions;
-  };
-
-  /**
-   * @brief Optional parameters for BlobContainerClient::BreakLease.
-   */
-  struct BreakBlobContainerLeaseOptions
-  {
-    /**
-     * @brief Context for cancelling long running operations.
-     */
-    Azure::Core::Context Context;
-
-    /**
-     * @brief Proposed duration the lease should continue before it is broken, in seconds,
-     * between 0 and 60. This break period is only used if it is shorter than the time remaining on
-     * the lease. If longer, the time remaining on the lease is used. A new lease will not be
-     * available before the break period has expired, but the lease may be held for longer than the
-     * break period.
-     */
-    Azure::Core::Nullable<int32_t> BreakPeriod;
-
-    /**
-     * @brief Optional conditions that must be met to perform this operation.
-     */
-    ModifiedTimeConditions AccessConditions;
   };
 
   /**
@@ -783,7 +701,7 @@ namespace Azure { namespace Storage { namespace Blobs {
   };
 
   /**
-   * @brief Optional parameters for BlobClient::AcquireLease.
+   * @brief Optional parameters for BlobLeaseClient::Acquire.
    */
   struct AcquireBlobLeaseOptions
   {
@@ -799,7 +717,7 @@ namespace Azure { namespace Storage { namespace Blobs {
   };
 
   /**
-   * @brief Optional parameters for BlobClient::RenewLease.
+   * @brief Optional parameters for BlobLeaseClient::Renew.
    */
   struct RenewBlobLeaseOptions
   {
@@ -815,7 +733,7 @@ namespace Azure { namespace Storage { namespace Blobs {
   };
 
   /**
-   * @brief Optional parameters for BlobClient::ChangeLease.
+   * @brief Optional parameters for BlobLeaseClient::Change.
    */
   struct ChangeBlobLeaseOptions
   {
@@ -831,7 +749,7 @@ namespace Azure { namespace Storage { namespace Blobs {
   };
 
   /**
-   * @brief Optional parameters for BlobClient::ReleaseLease.
+   * @brief Optional parameters for BlobLeaseClient::Release.
    */
   struct ReleaseBlobLeaseOptions
   {
@@ -847,7 +765,7 @@ namespace Azure { namespace Storage { namespace Blobs {
   };
 
   /**
-   * @brief Optional parameters for BlobClient::BreakLease.
+   * @brief Optional parameters for BlobLeaseClient::Break.
    */
   struct BreakBlobLeaseOptions
   {
@@ -863,7 +781,7 @@ namespace Azure { namespace Storage { namespace Blobs {
      * available before the break period has expired, but the lease may be held for longer than the
      * break period.
      */
-    Azure::Core::Nullable<int32_t> BreakPeriod;
+    Azure::Core::Nullable<std::chrono::seconds> BreakPeriod;
 
     /**
      * @brief Optional conditions that must be met to perform this operation.
@@ -1080,7 +998,7 @@ namespace Azure { namespace Storage { namespace Blobs {
      * @brief Specifies whether to return the list of committed blocks, the list of uncommitted
      * blocks, or both lists together.
      */
-    Azure::Core::Nullable<Models::BlockListTypeOption> ListType;
+    Models::BlockListTypeOption ListType = Models::BlockListTypeOption::Committed;
 
     /**
      * @brief Optional conditions that must be met to perform this operation.
