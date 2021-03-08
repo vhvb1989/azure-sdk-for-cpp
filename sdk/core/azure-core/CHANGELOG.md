@@ -11,9 +11,11 @@
 - Removed `Azure::Core::Http::HttpPipeline` by making it internal, used only within the SDK.
 - Split `Azure::Core::RequestConditions` into `Azure::Core::MatchConditions` and `Azure::Core::ModifiedConditions`.
 - Removed `TransportKind` enum from `Azure::Core::Http`.
+- Added `Azure::Core::Operation<T>::GetRawResponse().`
 - Renamed `NoRevoke` to `EnableCertificateRevocationListCheck` for `Azure::Core::Http::CurlTransportSSLOptions`.
 - Renamed `GetString()` to `ToString()` in `Azure::Core::DateTime`.
 - Renamed `GetUuidString()` to `ToString()` in `Azure::Core::Uuid`.
+- Moved `Version` from `Azure::Core::Details` to `Azure::Core`.
 - Moved `BodyStream` and its derived types from `Azure::Core::Http` namespace to `Azure::IO`, and moved the `body_stream.hpp` header from `azure/core/http` to `azure/core/io`.
 - Moved `NullBodyStream` to internal usage only. It is not meant for public use.
 - Removed `LimitBodyStream`.
